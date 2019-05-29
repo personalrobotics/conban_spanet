@@ -1,3 +1,4 @@
+import numpy as np
 from utils import oracle
 class ContextualBanditAlgo():
     "N: number of food pieces"
