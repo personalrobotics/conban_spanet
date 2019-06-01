@@ -33,7 +33,7 @@ class ContextualBanditAlgo(object):
         p[argmax_x, argmax_y] = 1
         return p
 
-    def learn(features_t, n_t, a_t, c_t, p_t):
+    def learn(self, features_t, n_t, a_t, c_t, p_t):
         oracle(self, features_t[n_t], a_t, c_t, p_t[n_t, a_t])
 
 
