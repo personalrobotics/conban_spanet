@@ -93,7 +93,7 @@ class singleUCB(ContextualBanditAlgo):
                 norm_bound = R * np.sqrt(2 * np.log(np.sqrt(np.linalg.det(A) / np.linalg.det(lambd*np.ones(d))) / delta)) \
                     + np.sqrt(lambd) * S
                 x = cp.Variable(d)
-                prob = cp.Problem(cp.Minimize(phi_n.T@x),[cp.quad_form(x - theta_a, A) <= norm_bound**2])
+                prob = cp.Problem(cp.Minimize(phi_n.T*x),[cp.quad_form(x - theta_a, A) <= norm_bound**2])
                 prob.solve()
                 
                 lcb[a] = prob.value
