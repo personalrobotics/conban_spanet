@@ -15,7 +15,7 @@ if __name__ == '__main__':
     ap.add_argument('-f', '--food_type', default="strawberry",
                     type=str, help="which food item to exclude")
 
-    ap.add_argument('-h', '--horizon', default=1000,
+    ap.add_argument('-ho', '--horizon', default=1000,
                     type=int, help="how long to run the experiment")
     args = ap.parse_args()
 
