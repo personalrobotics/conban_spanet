@@ -3,13 +3,10 @@ import numpy as np
 
 class ContextualBanditAlgo(object):
     "N: number of food pieces"
-    "Environment contains a lot of information"
 
-    def __init__(self, E, N, K=6, lambd=0.1, d=2048, init=" ", pi_0=None):
+    def __init__(self, N, K=6, lambd=0.1, d=2048, init=" ", pi_0=None):
         self.N = N
         self.K = K
-        "Plate is contained in E"
-        self.E = E
 
         "Initialization of the policy"
         self.theta = np.zeros((K, d+1))
@@ -38,9 +35,9 @@ class ContextualBanditAlgo(object):
 
 
 class epsilonGreedy(ContextualBanditAlgo):
-    def __init__(self, E, N, K=6, lambd=0.1, d=2048, init=" ", pi_0=None, epsilon=0.1):
+    def __init__(self, N, K=6, lambd=0.1, d=2048, init=" ", pi_0=None, epsilon=0.1):
         "Default epsilon is 0.1"
-        super().__init__(E, N, K, lambd, d, init, pi_0)
+        super().__init__(N, K, lambd, d, init, pi_0)
         self.epsilon = epsilon
 
     def explore(self, feature_t):
@@ -65,10 +62,10 @@ class epsilonGreedy(ContextualBanditAlgo):
 
 
 class singleUCB(ContextualBanditAlgo):
-    def __init__(self, E, N, K=6, lambd=0.1, d=2048, init=" ", pi_0=None,
+    def __init__(self, N, K=6, lambd=0.1, d=2048, init=" ", pi_0=None,
                  gamma=0.1, delta=0.1, R=3, S=2):
         "Default epsilon is 0.1"
-        super().__init__(E, N, K, lambd, d, init, pi_0)
+        super().__init__(N, K, lambd, d, init, pi_0)
         self.gamma = gamma
         self.delta = delta
         self.R = R
