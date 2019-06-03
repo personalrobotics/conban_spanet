@@ -43,8 +43,11 @@ if __name__ == '__main__':
     cost_algo, cost_spanet = envir.run(algo, args.horizon)
 
     # Store returned lists to CSV for later plotting
-    previous_dir =  os.path.dirname(os.getcwd())
+    # previous_dir =  os.path.dirname(os.getcwd())
+    previous_dir = os.getcwd()
     result_dir = os.path.join(previous_dir, "results")
     cost_to_output = np.array([cost_algo, cost_spanet])
-    output_file_name = "greedy_N_"+str(args.N)+"_T_"+args.horizon+".csv"
+    output_file_name = "greedy_N_"+str(args.N)+"_T_"+str(args.horizon)+".csv"
+    output_file_name = os.path.join(result_dir, output_file_name)
+    print(output_file_name)
     np.savetxt(output_file_name, cost_to_output, delimiter=',')
