@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import argparse
 import os
 import numpy as np
+import time
 
 from conban_spanet.environment import Environment
 from conban_spanet.conbanalg import *
@@ -40,13 +41,17 @@ if __name__ == '__main__':
     envir = Environment(args.N)
     
     # Run Environment using args.horizon
+    start = time.time()
     cost_algo, cost_spanet = envir.run(algo, args.horizon)
+    end = time.time()
+    print("Time taken: ", end-start)
 
     # Store returned lists to CSV for later plotting
     # previous_dir =  os.path.dirname(os.getcwd())
     previous_dir = os.getcwd()
     result_dir = os.path.join(previous_dir, "results")
     cost_to_output = np.array([cost_algo, cost_spanet])
+    cost_to_output  = cost_to_output.T
     output_file_name = "greedy_N_"+str(args.N)+"_T_"+str(args.horizon)+".csv"
     output_file_name = os.path.join(result_dir, output_file_name)
     print("Saved output file to ", output_file_name)
