@@ -21,12 +21,16 @@ class SPANetDriver:
         @param food_type: string specifying excluded food item, e.g. "strawberry"
         @param N: Number of food items to have on the plate at a time
         """
+        self.N = N
 
         # Load SPANet
         self.spanet_star = SPANet(use_rgb=config.use_rgb, use_depth=config.use_depth, use_wall=config.use_wall)
+        if config.use_cuda:
+            self.spanet_star = self.spanet_star.cuda()
+        self.spanet_star.eval()
         config.excluded_item = None
         config.set_project_prefix()
-        # XM note: config.project_dir was false. 
+        # XM note: config.project_dir was false.
         config.project_dir = "/home/conban/conban_ws/src/bite_selection_package"
         config.dataset_dir = os.path.join(config.project_dir, 'data/skewering_positions_{}'.format(config.project_keyword))
         config.img_dir = os.path.join(config.dataset_dir, 'cropped_images')
@@ -73,6 +77,7 @@ class SPANetDriver:
         for i in range(N):
             idx = np.random.randint(0, self.dataset.num_samples)
             pv, gv, features = self._sample_dataset(idx)
+            print("GV: " + str(gv))
             self.features[i, :] = features
             self.pi_star[i, 0] = np.argmax(pv)
             self.success_rates[i, :] = gv
@@ -97,7 +102,7 @@ class SPANetDriver:
             depth = depth.cuda() if depth is not None else None
             gt_vector = gt_vector.cuda()
             loc_type = loc_type.cuda()
-        
+
         # Run SPANet
         pred, feat_tf = self.spanet_star(rgb, depth, loc_type)
 
@@ -113,8 +118,11 @@ class SPANetDriver:
         """
         @return (Nx6): loss vector sampled from ground-truth success rates
         """
-        rand = np.random.random((N, 6))
-        ret = np.ones((N, 6))
+        rand = np.random.random((self.N, 6))
+        ret = np.ones((self.N, 6))
+
+        print("Success Rates: ")
+        print(self.success_rates)
 
         ret[rand < self.success_rates] = 0
         return ret

@@ -33,14 +33,17 @@ class Environment(object):
 
             # Get Costs
             costs = self.driver.sample_loss_vector()
-            pi_star = self.driver.get_pi_star()[n_t]
+            pi_star = int(self.driver.get_pi_star()[n_t][0])
+
+            #print("n_t: " + str(n_t))
+            #print("pi_star: " + str(pi_star))
 
             cost_SPANet = costs[n_t, pi_star]
             cost_algo = costs[n_t, a_t]
 
             # Learning
             algo.learn(self.features, n_t, a_t, cost_algo, p_t)
-            
+
             # Replace successfully acquired food item
             if (cost_algo == 0):
                 self.driver.resample(n_t)

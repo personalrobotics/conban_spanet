@@ -1,4 +1,4 @@
-from utils import oracle
+from .utils import oracle
 import numpy as np
 
 class ContextualBanditAlgo(object):
