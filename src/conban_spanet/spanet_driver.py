@@ -3,12 +3,14 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+import os
 import numpy as np
 
 import torch
 import torch.optim as optim
 import torchvision.transforms as transforms
 
+from bite_selection_package.model.spanet import SPANet
 from bite_selection_package.config import spanet_config as config
 from bite_selection_package.model.spanet_dataset import SPANetDataset
 
@@ -24,6 +26,24 @@ class SPANetDriver:
         self.spanet_star = SPANet(use_rgb=config.use_rgb, use_depth=config.use_depth, use_wall=config.use_wall)
         config.excluded_item = None
         config.set_project_prefix()
+        # XM note: config.project_dir was false. 
+        config.project_dir = "/home/conban/conban_ws/src/bite_selection_package"
+        config.dataset_dir = os.path.join(config.project_dir, 'data/skewering_positions_{}'.format(config.project_keyword))
+        config.img_dir = os.path.join(config.dataset_dir, 'cropped_images')
+        config.depth_dir = os.path.join(config.dataset_dir, 'cropped_depth')
+        config.ann_dir = os.path.join(config.dataset_dir, 'annotations')
+        config.success_rate_map_path = os.path.join(
+                            config.dataset_dir,
+                            'identity_to_success_rate_map_{}.json'.format(config.project_keyword))
+
+        config.pretrained_dir = os.path.join(config.project_dir, 'pretrained')
+        config.checkpoint_filename = os.path.join(
+                config.project_dir, 'checkpoint/{}_ckpt.pth'.format(config.project_prefix))
+        config.checkpoint_best_filename = os.path.join(
+                config.project_dir, 'checkpoint/{}_ckpt_best.pth'.format(config.project_prefix))
+        config.test_list_filepath = os.path.join(config.dataset_dir, 'test.txt')
+        #checkpoint_file = "/home/conban/conban_ws/src/bite_selection_package/checkpoint/food_spanet_all_rgb_wall_ckpt_best.pth"
+        #checkpoint = torch.load(checkpoint_file)
         checkpoint = torch.load(config.checkpoint_best_filename)
         self.spanet_star.load_state_dict(checkpoint['net'])
 
@@ -79,7 +99,7 @@ class SPANetDriver:
             loc_type = loc_type.cuda()
         
         # Run SPANet
-        pred, feat_tf = spanet(rgb, depth, loc_type)
+        pred, feat_tf = self.spanet_star(rgb, depth, loc_type)
 
         # Post-process to Numpy
         gv = gt_vector.cpu().detach()[0][4:].numpy().resize((1, 6))

@@ -7,7 +7,7 @@ import numpy as np
 
 from conban_spanet.spanet_driver import SPANetDriver
 
-def Environment(object):
+class Environment(object):
     def __init__(self, N, d=2048, food_type="strawberry"):
         self.N = N
         self.features = np.ones((N, d+1))
