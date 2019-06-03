@@ -31,7 +31,7 @@ class ContextualBanditAlgo(object):
         return p
 
     def learn(self, features_t, n_t, a_t, c_t, p_t):
-        oracle(self, features_t[n_t], a_t, c_t, p_t[n_t, a_t])
+        oracle(self, features_t[n_t, :], a_t, c_t, p_t[n_t, a_t])
 
 
 class epsilonGreedy(ContextualBanditAlgo):

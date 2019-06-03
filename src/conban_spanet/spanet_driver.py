@@ -109,7 +109,8 @@ class SPANetDriver:
         gv.resize((1, 6))
         pv = pred.cpu().detach()[0][4:].numpy()
         pv.resize((1, 6))
-        features = feat_tf.cpu().detach()[0].numpy().resize((1, 2048))
+        features = feat_tf.cpu().detach()[0].numpy()
+        features.resize((1, 2048))
 
         return pv, gv, features
 
@@ -120,9 +121,6 @@ class SPANetDriver:
         """
         rand = np.random.random((self.N, 6))
         ret = np.ones((self.N, 6))
-
-        print("Success Rates: ")
-        print(self.success_rates)
 
         ret[rand < self.success_rates] = 0
         return ret

@@ -19,7 +19,7 @@ class Environment(object):
         N = self.N
         costs_algo = []
         costs_spanet = []
-        
+
         # Run algorithm for T time steps
         for t in range(T):
             # Exploration / Exploitation
@@ -27,8 +27,8 @@ class Environment(object):
 
             # Sample Action
             _, K = p_t.shape
-            p_t = p_t.reshape((-1,))
-            sample_idx = np.random.choice(N*K, p = p_t)
+            p_t_flat = p_t.reshape((-1,))
+            sample_idx = np.random.choice(N*K, p = p_t_flat)
             n_t, a_t = sample_idx // K, sample_idx % K
 
             # Get Costs

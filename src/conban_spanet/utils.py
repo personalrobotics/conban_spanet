@@ -1,3 +1,5 @@
+import numpy as np
+
 def array_map(f, x):
     return np.array(list(map(f, x)))
 
