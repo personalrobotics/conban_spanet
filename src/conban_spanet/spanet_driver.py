@@ -77,7 +77,6 @@ class SPANetDriver:
         for i in range(N):
             idx = np.random.randint(0, self.dataset.num_samples)
             pv, gv, features = self._sample_dataset(idx)
-            print("GV: " + str(gv))
             self.features[i, :] = features
             self.pi_star[i, 0] = np.argmax(pv)
             self.success_rates[i, :] = gv
@@ -100,15 +99,16 @@ class SPANetDriver:
         if config.use_cuda:
             rgb = rgb.cuda() if rgb is not None else None
             depth = depth.cuda() if depth is not None else None
-            gt_vector = gt_vector.cuda()
             loc_type = loc_type.cuda()
 
         # Run SPANet
         pred, feat_tf = self.spanet_star(rgb, depth, loc_type)
 
         # Post-process to Numpy
-        gv = gt_vector.cpu().detach()[0][4:].numpy().resize((1, 6))
-        pv = pred.cpu().detach()[0][4:].numpy().resize((1, 6))
+        gv = gt_vector.cpu().detach()[0][4:].numpy()
+        gv.resize((1, 6))
+        pv = pred.cpu().detach()[0][4:].numpy()
+        pv.resize((1, 6))
         features = feat_tf.cpu().detach()[0].numpy().resize((1, 2048))
 
         return pv, gv, features
