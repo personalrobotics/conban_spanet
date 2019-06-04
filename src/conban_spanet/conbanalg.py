@@ -37,10 +37,10 @@ class ContextualBanditAlgo(object):
 class epsilonGreedy(ContextualBanditAlgo):
     def __init__(self, N, K=6, lambd=0.1, d=2048, init=" ", pi_0=None, epsilon=0.1):
         "Default epsilon is 0.1"
-        super().__init__(N, K, lambd, d, init, pi_0)
+        super(epsilonGreedy,self).__init__(N, K, lambd, d, init, pi_0)
         self.epsilon = epsilon
 
-    def explore(self, feature_t):
+    def explore(self, features_t):
         "p: N * K dimensional prob. matrix, with the sum to 1"
         "features_t: (N * 2049) feature matrix"
         K = self.K
@@ -48,7 +48,7 @@ class epsilonGreedy(ContextualBanditAlgo):
         epsilon = self.epsilon
 
         dist = np.dot(features_t, self.theta.T)  # size of N * K
-        argmax_x, argmax_y = argmax_index // K, argmax_index % K
+        #argmax_x, argmax_y = argmax_index // K, argmax_index % K
 
         n = np.random.choice(N)
         argmax_k = np.argmax(dist, axis=1)[n]
@@ -71,7 +71,7 @@ class singleUCB(ContextualBanditAlgo):
         self.R = R
         self.S = S
 
-    def explore(self, feature_t):
+    def explore(self, features_t):
         "p: N * K dimensional prob. matrix, with the sum to 1"
         "features_t: (N * 2049) feature matrix"
         K = self.K
@@ -83,7 +83,7 @@ class singleUCB(ContextualBanditAlgo):
         lambd = self.lambd
         while True:
             n = np.random.choice(N)
-            phi_n = feature_t[n,:]
+            phi_n = features_t[n,:]
             lcb = np.zeros(K)
             for a in range(K):
                 A_a = self.A[a]
