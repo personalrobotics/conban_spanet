@@ -43,6 +43,11 @@ if __name__ == '__main__':
     	epsilon = input("Set epsilon: ")
     	algo = epsilonGreedy(N=args.N, epsilon=epsilon)
     	args.algo += "_epsilon_" +str(epsilon)
+    elif args.algo == "singleUCB":
+    	gamma = input("Set gamma: ")
+    	delta = input("Set delta: ")
+    	algo = singleUCB(N=args.N, delta=delta,gamma=gamma)
+    	args.algo += "_gamma_"+str(gamma)+"_delta_" +str(delta)
 
     # Initialize Environment
     envir = Environment(args.N)

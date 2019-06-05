@@ -1,5 +1,6 @@
 from .utils import oracle
 import numpy as np
+import cvxpy as cp
 
 class ContextualBanditAlgo(object):
     "N: number of food pieces"
@@ -65,7 +66,7 @@ class singleUCB(ContextualBanditAlgo):
     def __init__(self, N, K=6, lambd=0.1, d=2048, init=" ", pi_0=None,
                  gamma=0.1, delta=0.1, R=3, S=2):
         "Default epsilon is 0.1"
-        super().__init__(N, K, lambd, d, init, pi_0)
+        super(singleUCB,self).__init__(N, K, lambd, d, init, pi_0)
         self.gamma = gamma
         self.delta = delta
         self.R = R
@@ -90,7 +91,7 @@ class singleUCB(ContextualBanditAlgo):
                 theta_a = self.theta[a]
                 d = A_a.shape[0]
                 "Linear programming is used for UCB"
-                norm_bound = R * np.sqrt(2 * np.log(np.sqrt(np.linalg.det(A) / np.linalg.det(lambd*np.ones(d))) / delta)) \
+                norm_bound = R * np.sqrt(2 * np.log(np.sqrt(np.linalg.det(A_a) / np.linalg.det(lambd*np.eye(d))) / delta)) \
                     + np.sqrt(lambd) * S
                 x = cp.Variable(d)
                 prob = cp.Problem(cp.Minimize(phi_n.T*x),[cp.quad_form(x - theta_a, A) <= norm_bound**2])

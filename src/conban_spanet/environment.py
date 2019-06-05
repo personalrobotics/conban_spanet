@@ -22,6 +22,8 @@ class Environment(object):
 
         # Run algorithm for T time steps
         for t in range(T):
+            if t % 200 == 0:
+                print("Now at horzion", t)
             # Exploration / Exploitation
             p_t = algo.explore(self.features)
 
