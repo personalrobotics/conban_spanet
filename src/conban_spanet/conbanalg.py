@@ -117,6 +117,12 @@ class multiUCB(ContextualBanditAlgo):
         K = self.K
         N = self.N
         alpha = self.alpha
+
+        # Pre-calculate inverses
+        A_inv = [None] * K
+        for a in range(K):
+            A_inv[a] = np.linalg.inv(self.A[a])
+            
         # lambd = self.lambd
         ucb = np.zeros((N,K))
         for n in range(N):
@@ -125,7 +131,7 @@ class multiUCB(ContextualBanditAlgo):
                 A_a = self.A[a]
                 theta_a = self.theta[a]
                 d = A_a.shape[0]
-                ucb[n, a] = np.dot(theta_a, phi_n) + alpha * np.sqrt(np.dot(phi_n, np.dot(np.linalg.inv(A_a),phi_n)))
+                ucb[n, a] = np.dot(theta_a, phi_n) + alpha * np.sqrt(np.dot(phi_n, np.dot(A_inv[a],phi_n)))
         p = np.zeros((N, K))
         argmax_index = np.argmax(ucb)
         argmax_x, argmax_y = argmax_index // K, argmax_index % K
