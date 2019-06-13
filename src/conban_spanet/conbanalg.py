@@ -1,6 +1,6 @@
 from .utils import oracle
 import numpy as np
-import cvxpy as cp
+
 
 class ContextualBanditAlgo(object):
     "N: number of food pieces"
@@ -64,46 +64,72 @@ class epsilonGreedy(ContextualBanditAlgo):
 
 class singleUCB(ContextualBanditAlgo):
     def __init__(self, N, K=6, lambd=0.1, d=2048, init=" ", pi_0=None,
-                 gamma=0.1, delta=0.1, R=3, S=2):
+                 alpha=0.1, gamma=0.1):
         "Default epsilon is 0.1"
         super(singleUCB,self).__init__(N, K, lambd, d, init, pi_0)
+        self.alpha = alpha
         self.gamma = gamma
-        self.delta = delta
-        self.R = R
-        self.S = S
 
     def explore(self, features_t):
         "p: N * K dimensional prob. matrix, with the sum to 1"
         "features_t: (N * 2049) feature matrix"
         K = self.K
         N = self.N
+        alpha = self.alpha
         gamma = self.gamma
-        delta = self.delta
-        R = self.R
-        S = self.S
         lambd = self.lambd
         while True:
             n = np.random.choice(N)
             phi_n = features_t[n,:]
-            lcb = np.zeros(K)
+            ucb = np.zeros(K)
             for a in range(K):
                 A_a = self.A[a]
                 theta_a = self.theta[a]
                 d = A_a.shape[0]
-                "Linear programming is used for UCB"
-                norm_bound = R * np.sqrt(2 * np.log(np.sqrt(np.linalg.det(A_a) / np.linalg.det(lambd*np.eye(d))) / delta)) \
-                    + np.sqrt(lambd) * S
-                x = cp.Variable(d)
-                prob = cp.Problem(cp.Minimize(phi_n.T*x),[cp.quad_form(x - theta_a, A) <= norm_bound**2])
-                prob.solve()
-                
-                lcb[a] = prob.value
-            if np.min(lcb) >= gamma:
+
+                # "Linear programming is used for UCB"
+                # norm_bound = R * np.sqrt(2 * np.log(np.sqrt(np.linalg.det(A_a) / np.linalg.det(lambd*np.eye(d))) / delta)) \
+                #     + np.sqrt(lambd) * S
+                # x = cp.Variable(d)
+                # prob = cp.Problem(cp.Minimize(phi_n.T*x),[cp.quad_form(x - theta_a, A) <= norm_bound**2])
+                # prob.solve()
+                # ucb[a] = prob.value
+                ucb[a] = np.dot(theta_a, phi_n) + alpha * np.sqrt(np.dot(phi_n, np.dot(np.linalg.inv(A_a),phi_n)))
+            if np.max(ucb) <= gamma:
                 continue
             else:
                 break
         p = np.zeros((N, K))
-        p[n, np.argmin(lcb)] = 1
+        p[n, np.argmax(ucb)] = 1
+        return p
+        
+        "learn is just a call to oracle, which is same as the superclass"
+
+class multiUCB(ContextualBanditAlgo):
+    def __init__(self, N, K=6, lambd=0.1, d=2048, init=" ", pi_0=None,
+                 alpha=0.1):
+        super(multiUCB,self).__init__(N, K, lambd, d, init, pi_0)
+        self.alpha = alpha
+
+    def explore(self, features_t):
+        "p: N * K dimensional prob. matrix, with the sum to 1"
+        "features_t: (N * 2049) feature matrix"
+        K = self.K
+        N = self.N
+        alpha = self.alpha
+        # lambd = self.lambd
+        ucb = np.zeros((N,K))
+        for n in range(N):
+            phi_n = features_t[n,:]
+            for a in range(K):
+                A_a = self.A[a]
+                theta_a = self.theta[a]
+                d = A_a.shape[0]
+                ucb[n, a] = np.dot(theta_a, phi_n) + alpha * np.sqrt(np.dot(phi_n, np.dot(np.linalg.inv(A_a),phi_n)))
+        p = np.zeros((N, K))
+        argmax_index = np.argmax(ucb)
+        argmax_x, argmax_y = argmax_index // K, argmax_index % K
+        p[argmax_x, argmax_y] = 1
         return p
         
         "learn is just a call to oracle, which is same as the superclass"
