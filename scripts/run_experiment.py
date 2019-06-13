@@ -44,10 +44,9 @@ if __name__ == '__main__':
     	algo = epsilonGreedy(N=args.N, epsilon=epsilon)
     	args.algo += "_epsilon_" +str(epsilon)
     elif args.algo == "singleUCB":
-    	gamma = input("Set gamma: ")
-    	delta = input("Set delta: ")
-    	algo = singleUCB(N=args.N, delta=delta,gamma=gamma)
-    	args.algo += "_gamma_"+str(gamma)+"_delta_" +str(delta)
+    	gamma = float(input("Set gamma: "))
+    	algo = singleUCB(N=args.N, gamma=gamma)
+    	args.algo += "_gamma_"+str(gamma)
 
     # Initialize Environment
     envir = Environment(args.N)
@@ -68,3 +67,4 @@ if __name__ == '__main__':
     output_file_name = os.path.join(result_dir, output_file_name)
     print("Saved output file to ", output_file_name)
     np.savetxt(output_file_name, cost_to_output, delimiter=',')
+

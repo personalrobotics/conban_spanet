@@ -95,7 +95,7 @@ class singleUCB(ContextualBanditAlgo):
                 # prob.solve()
                 # ucb[a] = prob.value
                 ucb[a] = np.dot(theta_a, phi_n) + alpha * np.sqrt(np.dot(phi_n, np.dot(np.linalg.inv(A_a),phi_n)))
-            if np.max(ucb) <= gamma:
+            if np.amax(ucb) <= gamma:
                 continue
             else:
                 break
