@@ -16,12 +16,13 @@ from bite_selection_package.model.spanet_dataset import SPANetDataset
 
 
 class SPANetDriver:
-    def __init__(self, food_type="strawberry", N=10):
+    def __init__(self, food_type="strawberry", N=10, synthetic=False):
         """
         @param food_type: string specifying excluded food item, e.g. "strawberry"
         @param N: Number of food items to have on the plate at a time
         """
         self.N = N
+        self.synthetic = synthetic
 
         # Load SPANet
         self.spanet_star = SPANet(use_rgb=config.use_rgb, use_depth=config.use_depth, use_wall=config.use_wall)
@@ -52,7 +53,10 @@ class SPANetDriver:
         self.spanet_star.load_state_dict(checkpoint['net'])
 
         # Load Dataset
+        exp_mode = 'test'
         config.excluded_item = food_type
+        if food_type is None:
+            exp_mode = 'normal'
         config.set_project_prefix()
         self.dataset = SPANetDataset(
             img_dir=config.img_dir,
@@ -62,7 +66,7 @@ class SPANetDriver:
             img_res=config.img_res,
             list_filepath=config.test_list_filepath,
             train=False,
-            exp_mode='test',
+            exp_mode=exp_mode,
             excluded_item=config.excluded_item,
             transform=transforms.Compose([transforms.ToTensor()]),
             use_rgb=config.use_rgb,
@@ -79,7 +83,10 @@ class SPANetDriver:
             pv, gv, features = self._sample_dataset(idx)
             self.features[i, :] = features
             self.pi_star[i, 0] = np.argmax(pv)
-            self.success_rates[i, :] = gv
+            if self.synthetic:
+                self.success_rates[i, :] = pv
+            else:
+                self.success_rates[i, :] = gv
 
 
     def _sample_dataset(self, idx):

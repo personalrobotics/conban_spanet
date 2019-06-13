@@ -8,10 +8,10 @@ import numpy as np
 from conban_spanet.spanet_driver import SPANetDriver
 
 class Environment(object):
-    def __init__(self, N, d=2048, food_type="strawberry"):
+    def __init__(self, N, d=2048, food_type="strawberry", synthetic=True):
         self.N = N
         self.features = np.ones((N, d+1))
-        self.driver = SPANetDriver(food_type, N)
+        self.driver = SPANetDriver(food_type, N, synthetic)
 
         self.features[:, 1:] = self.driver.get_features()
 

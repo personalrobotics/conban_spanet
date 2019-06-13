@@ -15,7 +15,7 @@ from bite_selection_package.config import spanet_config as config
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
-    ap.add_argument('-f', '--food_type', default="strawberry",
+    ap.add_argument('-f', '--food_type', default=None,
                     type=str, help="which food item to exclude")
 
     ap.add_argument('-ho', '--horizon', default=100,
@@ -27,6 +27,7 @@ if __name__ == '__main__':
     				type=str, help="how many food items in the plate")
 
     ap.add_argument('-g', '--gpu', default='0', type=str, help="GPU ID")
+    ap.add_argument('-s', '--synthetic', help="Use Synthetic Data", action="store_true")
 
     args = ap.parse_args()
 
@@ -54,8 +55,11 @@ if __name__ == '__main__':
     elif args.algo == "multiUCB":
     	algo = multiUCB(N=args.N)
 
+    if args.synthetic:
+        args.algo += "_synthetic"
+
     # Initialize Environment
-    envir = Environment(args.N)
+    envir = Environment(args.N, food_type=args.food_type, synthetic=args.synthetic)
     
     # Run Environment using args.horizon
     start = time.time()
