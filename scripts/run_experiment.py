@@ -26,7 +26,11 @@ if __name__ == '__main__':
     ap.add_argument('-a', '--algo', default="greedy",
     				type=str, help="how many food items in the plate")
 
+    ap.add_argument('-g', '--gpu', default='0', type=str, help="GPU ID")
+
     args = ap.parse_args()
+
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
     # Validation: make sure args.food_type is in config.items
     try:
@@ -40,13 +44,15 @@ if __name__ == '__main__':
     if  args.algo == "greedy":
         algo = ContextualBanditAlgo(N=args.N)
     elif args.algo == "epsilon":
-    	epsilon = input("Set epsilon: ")
+    	epsilon = float(input("Set epsilon: "))
     	algo = epsilonGreedy(N=args.N, epsilon=epsilon)
     	args.algo += "_epsilon_" +str(epsilon)
     elif args.algo == "singleUCB":
     	gamma = float(input("Set gamma: "))
     	algo = singleUCB(N=args.N, gamma=gamma)
     	args.algo += "_gamma_"+str(gamma)
+    elif args.algo == "multiUCB":
+    	algo = multiUCB(N=args.N)
 
     # Initialize Environment
     envir = Environment(args.N)
