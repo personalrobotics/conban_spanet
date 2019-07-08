@@ -16,7 +16,7 @@ from bite_selection_package.model.spanet_dataset import SPANetDataset
 
 
 class SPANetDriver:
-    def __init__(self, food_type="strawberry", N=10, synthetic=False):
+    def __init__(self, food_type="strawberry", loc_type='isolated', N=10, synthetic=False):
         """
         @param food_type: string specifying excluded food item, e.g. "strawberry"
         @param N: Number of food items to have on the plate at a time
@@ -59,6 +59,7 @@ class SPANetDriver:
             exp_mode = 'normal'
         config.set_project_prefix()
         self.dataset = SPANetDataset(
+        	loc_type = loc_type,
             img_dir=config.img_dir,
             depth_dir=config.depth_dir,
             ann_dir=config.ann_dir,

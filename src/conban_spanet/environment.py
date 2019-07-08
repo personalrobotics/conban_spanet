@@ -19,6 +19,8 @@ class Environment(object):
         N = self.N
         costs_algo = []
         costs_spanet = []
+        pi_star_choice_hist = []
+        pi_choice_hist = []
 
         # Run algorithm for T time steps
         for t in range(T):
@@ -42,6 +44,8 @@ class Environment(object):
 
             cost_SPANet = costs[n_t, pi_star]
             cost_algo = costs[n_t, a_t]
+            pi_star_choice_hist.append(pi_star)
+            pi_choice_hist.append(a_t)
 
             # Learning
             algo.learn(self.features, n_t, a_t, cost_algo, p_t)
@@ -55,4 +59,4 @@ class Environment(object):
             costs_algo.append(cost_algo)
             costs_spanet.append(cost_SPANet)
 
-        return costs_algo, costs_spanet
+        return (costs_algo, costs_spanet,pi_star_choice_hist,pi_choice_hist)
