@@ -61,7 +61,7 @@ if __name__ == '__main__':
         args.algo += "_synthetic"
 
     # Initialize Environment
-    envir = Environment(args.N, food_type=args.food_type, synthetic=args.synthetic)
+    envir = Environment(args.N, food_type=args.food_type, loc_type=args.loc_type, synthetic=args.synthetic)
     
     # Run Environment using args.horizon
     start = time.time()
