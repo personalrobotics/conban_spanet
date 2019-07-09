@@ -58,8 +58,18 @@ class SPANetDriver:
         if food_type is None:
             exp_mode = 'normal'
         config.set_project_prefix()
+
+        # only include isolated
+        assert config.test_list_filepath, 'invalid list_filepath'
+        with open(config.test_list_filepath, 'r') as f_list:
+            ann_filenames = list(map(str.strip, f_list.readlines()))
+        ann_filenames_to_include =[]
+        for ann_filename in ann_filenames:
+            if ann_filename.find('isolated') >= 0:
+                ann_filenames_to_include.append(ann_filename)
+
         self.dataset = SPANetDataset(
-        	#loc_type = loc_type,
+        	ann_filenames = ann_filenames_to_include,
             img_dir=config.img_dir,
             depth_dir=config.depth_dir,
             ann_dir=config.ann_dir,
