@@ -59,7 +59,7 @@ class SPANetDriver:
             exp_mode = 'normal'
         config.set_project_prefix()
         self.dataset = SPANetDataset(
-        	loc_type = loc_type,
+        	#loc_type = loc_type,
             img_dir=config.img_dir,
             depth_dir=config.depth_dir,
             ann_dir=config.ann_dir,

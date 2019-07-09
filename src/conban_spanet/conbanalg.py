@@ -24,7 +24,7 @@ class MultiArmedUCB(object):
         p = np.zeros((N, K))
         n = np.random.choice(N) # it really does not matter choose which because they are all strawberry isolated
         argmax_action = np.argmax(self.mu_hat_t + np.sqrt( np.log(2*K*T/delta)/(2*self.n_t) ) )
-        p[n, argmax_K] = 1
+        p[n, argmax_action] = 1
         return p
 
     def learn(self, features_t, n_t, a_t, c_t, p_t):
