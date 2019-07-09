@@ -67,7 +67,7 @@ class SPANetDriver:
         for ann_filename in ann_filenames:
             if ann_filename.find('isolated') >= 0:
                 ann_filenames_to_include.append(ann_filename)
-
+        print(ann_filenames_to_include[:5])
         self.dataset = SPANetDataset(
         	ann_filenames = ann_filenames_to_include,
             img_dir=config.img_dir,

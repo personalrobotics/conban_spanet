@@ -57,8 +57,9 @@ if __name__ == '__main__':
     elif args.algo == "multiUCB":
     	algo = multiUCB(N=args.N)
     elif args.algo == "UCB":
-        algo = MultiArmedUCB(N=args.N, T=args.horizon)
-
+    	delta = float(input("Set delta: "))
+    	algo = MultiArmedUCB(N=args.N, T=args.horizon,delta=delta)
+    	args.algo += "_delta_"+str(delta)
     if args.synthetic:
         args.algo += "_synthetic"
 
