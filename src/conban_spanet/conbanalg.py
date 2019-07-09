@@ -11,7 +11,7 @@ class MultiArmedUCB(object):
         self.T = T
         self.delta = delta
         "Initialization of the policy"
-        self.n_t = np.zeros(K)
+        self.n_t = np.ones(K)
         self.mu_hat_t = np.zeros(K)
 
     def explore(self, features_t):
