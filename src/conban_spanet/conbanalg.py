@@ -2,6 +2,41 @@ from .utils import oracle
 import numpy as np
 
 
+class MultiArmedUCB(object):
+
+    def __init__(self, N, K=6, lambd=0.1, d=2048, init=" ", pi_0=None,
+                T=1000, delta=0.1):
+        self.N = N
+        self.K = K
+        self.T = T
+        self.delta = delta
+        "Initialization of the policy"
+        self.n_t = np.zeros(K)
+        self.mu_hat_t = np.zeros(K)
+
+    def explore(self, features_t):
+        "p: N * K dimensional prob. matrix, with the sum to 1"
+        "features_t: (N * 2049) feature matrix"
+        K = self.K
+        N = self.N
+        T = self.T
+        delta = self.delta
+        p = np.zeros((N, K))
+        n = np.random.choice(N) # it really does not matter choose which because they are all strawberry isolated
+        argmax_action = np.argmax(self.mu_hat_t + np.sqrt( np.log(2*K*T/delta)/(2*self.n_t) ) )
+        p[n, argmax_K] = 1
+        return p
+
+    def learn(self, features_t, n_t, a_t, c_t, p_t):
+        "Update self.n_t and self.mu_hat_t"
+        "Here we use 0/-1 for success/fail to make the upper bound algo valid"
+        r_t = -c_t
+        curr_n_t = self.n_t[a_t]
+        curr_mu_hat_t = self.mu_hat_t[a_t]
+        # Update
+        self.mu_hat_t[a_t] = (curr_mu_hat_t * curr_n_t + r_t) / (curr_n_t + 1)
+        self.n_t[a_t] = curr_n_t + 1
+
 class ContextualBanditAlgo(object):
     "N: number of food pieces"
 
@@ -35,6 +70,7 @@ class ContextualBanditAlgo(object):
         oracle(self, features_t[n_t, :], a_t, c_t, p_t[n_t, a_t])
 
 
+
 class epsilonGreedy(ContextualBanditAlgo):
     def __init__(self, N, K=6, lambd=0.1, d=2048, init=" ", pi_0=None, epsilon=0.1):
         "Default epsilon is 0.1"
@@ -60,6 +96,8 @@ class epsilonGreedy(ContextualBanditAlgo):
         return p
 
     "learn is just a call to oracle, which is same as the superclass"
+
+
 
 
 class singleUCB(ContextualBanditAlgo):
@@ -104,6 +142,10 @@ class singleUCB(ContextualBanditAlgo):
         return p
         
         "learn is just a call to oracle, which is same as the superclass"
+
+
+
+
 
 class multiUCB(ContextualBanditAlgo):
     def __init__(self, N, K=6, lambd=0.1, d=2048, init=" ", pi_0=None,

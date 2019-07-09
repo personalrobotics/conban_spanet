@@ -56,6 +56,8 @@ if __name__ == '__main__':
     	args.algo += "_gamma_"+str(gamma)
     elif args.algo == "multiUCB":
     	algo = multiUCB(N=args.N)
+    elif args.algo == "UCB":
+        algo = MultiArmedUCB(N=args.N, T=args.horizon)
 
     if args.synthetic:
         args.algo += "_synthetic"
