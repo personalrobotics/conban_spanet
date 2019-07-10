@@ -26,8 +26,8 @@ class Environment(object):
 
         N = algo.N
         K = algo.K
-        X_to_test = np.array([[] for i in range(K)])
-        y_to_test = np.array([[] for i in range(K)])
+        X_to_test = [[] for i in range(K)]
+        y_to_test = [[] for i in range(K)]
 
         # Run algorithm for T time steps
         for t in range(T):
@@ -35,7 +35,7 @@ class Environment(object):
                 print("Now at horzion", t)
 
             if t == 400:
-                test_oracle(algo, )
+                test_oracle(algo, X_to_test, y_to_test)
             # Exploration / Exploitation
             p_t = algo.explore(self.features)
 
@@ -61,8 +61,8 @@ class Environment(object):
             algo.learn(self.features, n_t, a_t, cost_algo, p_t)
             if t < 400:
                 # Update X_to_test, y_to_test
-                X_to_test[a_t].append(self.features[n_t, :] / np.sqrt(p_t))
-                y_to_test[a_t].append(cost_algo/ np.sqrt(p_t))
+                X_to_test[a_t].append(self.features[n_t, :] / np.sqrt(p_t[n_t,a_t]))
+                y_to_test[a_t].append(cost_algo/ np.sqrt(p_t[n_t,a_t]))
             # Replace successfully acquired food item
             if (cost_algo == 0):
                 self.driver.resample(n_t)
