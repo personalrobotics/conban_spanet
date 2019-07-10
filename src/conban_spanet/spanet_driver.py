@@ -63,11 +63,13 @@ class SPANetDriver:
         assert config.test_list_filepath, 'invalid list_filepath'
         with open(config.test_list_filepath, 'r') as f_list:
             ann_filenames = list(map(str.strip, f_list.readlines()))
-        ann_filenames_to_include =[]
-        for ann_filename in ann_filenames:
-            if ann_filename.find('isolated') >= 0:
-                ann_filenames_to_include.append(ann_filename)
-        print(ann_filenames_to_include[:5])
+        if loc_type=="isolated":
+            ann_filenames_to_include =[]
+            for ann_filename in ann_filenames:
+                if ann_filename.find('isolated') >= 0:
+                    ann_filenames_to_include.append(ann_filename)
+        else:
+            ann_filenames_to_include =ann_filenames
         self.dataset = SPANetDataset(
         	ann_filenames = ann_filenames_to_include,
             img_dir=config.img_dir,
