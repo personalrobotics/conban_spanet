@@ -23,18 +23,18 @@ class MultiArmedUCB(object):
         delta = self.delta
         p = np.zeros((N, K))
         n = np.random.choice(N) # it really does not matter choose which because they are all strawberry isolated
-        argmax_action = np.argmax(self.mu_hat_t + np.sqrt( np.log(2*K*T/delta)/(2*self.n_t) ) )
-        p[n, argmax_action] = 1
+        argmin_action = np.argmin(self.mu_hat_t - np.sqrt( np.log(2*K*T/delta)/(2*self.n_t) ) )
+        p[n, argmin_action] = 1
         return p
 
     def learn(self, features_t, n_t, a_t, c_t, p_t):
         "Update self.n_t and self.mu_hat_t"
-        "Here we use 0/-1 for success/fail to make the upper bound algo valid"
-        r_t = -c_t
+        #"Here we use 0/-1 for success/fail to make the upper bound algo valid"
+        #r_t = -c_t
         curr_n_t = self.n_t[a_t]
         curr_mu_hat_t = self.mu_hat_t[a_t]
         # Update
-        self.mu_hat_t[a_t] = (curr_mu_hat_t * curr_n_t + r_t) / (curr_n_t + 1)
+        self.mu_hat_t[a_t] = (curr_mu_hat_t * curr_n_t + c_t) / (curr_n_t + 1)
         self.n_t[a_t] = curr_n_t + 1
 
 class ContextualBanditAlgo(object):
