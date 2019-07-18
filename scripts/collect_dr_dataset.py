@@ -9,6 +9,18 @@ import csv
 
 from conban_spanet.spanet_driver import SPANetDriver
 
+def get_action_idx(filename):
+	ret = 0
+	if "tilted_angled" in filename:
+		ret = 4
+	elif "tilted_vertical" in filename:
+		ret = 2
+
+	if "angle-90" in filename:
+		ret += 1
+
+	return ret
+
 if __name__ == '__main__':
 
 	# Initialize SPANet
@@ -21,14 +33,18 @@ if __name__ == '__main__':
 
 	# Pull CSV
 	print("Reading loss CSV...")
-	r_dict = {}
+	l_dict = {}
 	with open('consolidated_successes.csv') as csvfile:
 		reader = csv.reader(csvfile)
 		for row in reader:
-			r_dict[row[0]] = float(row[1])
+			l_dict[row[0]] = float(row[1])
 
 	# For Each File in Dataset
+	print("Running on %d files..." % len(ann_filenames))
+	output_csv = []
 	for i in range(len(ann_filenames)):
+		if i % 100 == 0:
+			print("i: " + str(i))
 		filename = ann_filenames[i]
 		_, gv, features = driver._sample_dataset(i)
 
@@ -37,7 +53,25 @@ if __name__ == '__main__':
 
 		# Get Success
 		key = "+".join(filename.split("+", 2)[:2])
-		if key not in r_dict:
+		if key not in l_dict:
 				print("Warning, not in dict: " + key)
 				continue
-		r = r_dict[key]
+		l = l_dict[key]
+
+		# Calculate DR vector, note expected loss = (1-gv)
+		l_hat = 1.0 - gv
+		l_hat[0, action_idx] += (6.0 * (l - l_hat[0, action_idx]))
+
+		# Concatonate features
+		output_row = np.hstack((features, l_hat))
+		assert (output_row.shape == (1, 2054)), "Bad Shape for output!"
+
+		output_csv.append(output_row)
+
+	# Write CSV
+	print("Writing CSV...")
+	output_numpy = np.vstack(output_csv)
+	assert (output_numpy.shape == (len(output_csv), 2054)), "Bad output array size!"
+	np.savetxt("dr_dataset.csv", output_numpy, delimiter=",")
+
+
