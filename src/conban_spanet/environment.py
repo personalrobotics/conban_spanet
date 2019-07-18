@@ -26,12 +26,12 @@ class Environment(object):
 
         N = algo.N
         K = algo.K
-        X_to_test = [[] for i in range(K)]
-        y_to_test = [[] for i in range(K)]
+        # X_to_test = [[] for i in range(K)]
+        # y_to_test = [[] for i in range(K)]
 
         # Run algorithm for T time steps
         for t in range(T):
-            if t % 200 == 0:
+            if t % 10 == 0:
                 print("Now at horzion", t)
 
             #if t == 400:

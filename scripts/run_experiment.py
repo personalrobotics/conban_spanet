@@ -27,7 +27,10 @@ if __name__ == '__main__':
     				type=str, help="how many food items in the plate")
     ap.add_argument('-lo', '--loc_type', default="isolated",
                     type=str, help="which location type to choose")
-
+    ap.add_argument('-alp', '--alpha', default=0.05,
+                    type=float, help="alpha for LinUCB")
+    ap.add_argument('-ga', '--gamma',default=0, 
+                    type=float, help="gamma for singleUCB")
     ap.add_argument('-g', '--gpu', default='0', type=str, help="GPU ID")
     ap.add_argument('-s', '--synthetic', help="Use Synthetic Data", action="store_true")
 
@@ -51,9 +54,8 @@ if __name__ == '__main__':
     	algo = epsilonGreedy(N=args.N, epsilon=epsilon)
     	args.algo += "_epsilon_" +str(epsilon)
     elif args.algo == "singleUCB":
-    	gamma = float(input("Set gamma: "))
-    	algo = singleUCB(N=args.N, gamma=gamma)
-    	args.algo += "_gamma_"+str(gamma)
+    	algo = singleUCB(N=args.N, alpha=args.alpha, gamma=args.gamma)
+    	args.algo += "_alpha_"+str(args.alpha)+"_gamma_"+str(args.gamma)
     elif args.algo == "multiUCB":
     	algo = multiUCB(N=args.N)
     elif args.algo == "UCB":

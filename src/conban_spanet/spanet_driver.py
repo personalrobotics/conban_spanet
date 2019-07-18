@@ -16,7 +16,7 @@ from bite_selection_package.model.spanet_dataset import SPANetDataset
 
 
 class SPANetDriver:
-    def __init__(self, food_type="strawberry", loc_type='isolated', N=10, synthetic=False):
+    def __init__(self, food_type="strawberry", loc_type='isolated', N=10, synthetic=False, use_wo_spanet=False):
         """
         @param food_type: string specifying excluded food item, e.g. "strawberry"
         @param N: Number of food items to have on the plate at a time
@@ -29,7 +29,10 @@ class SPANetDriver:
         if config.use_cuda:
             self.spanet_star = self.spanet_star.cuda()
         self.spanet_star.eval()
-        config.excluded_item = None
+        if use_wo_spanet:
+            config.excluded_item = food_type
+        else:
+            config.excluded_item = None
         config.set_project_prefix()
         # XM note: config.project_dir was false.
         config.project_dir = "/home/conban/conban_ws/src/bite_selection_package"

@@ -119,7 +119,7 @@ class singleUCB(ContextualBanditAlgo):
         while True:
             n = np.random.choice(N)
             phi_n = features_t[n,:]
-            ucb = np.zeros(K)
+            lcb = np.zeros(K)
             for a in range(K):
                 A_a = self.A[a]
                 theta_a = self.theta[a]
@@ -132,13 +132,13 @@ class singleUCB(ContextualBanditAlgo):
                 # prob = cp.Problem(cp.Minimize(phi_n.T*x),[cp.quad_form(x - theta_a, A) <= norm_bound**2])
                 # prob.solve()
                 # ucb[a] = prob.value
-                ucb[a] = np.dot(theta_a, phi_n) + alpha * np.sqrt(np.dot(phi_n, np.dot(np.linalg.inv(A_a),phi_n)))
-            if np.amax(ucb) <= gamma:
+                lcb[a] = np.dot(theta_a, phi_n) - alpha * np.sqrt(np.dot(phi_n, np.dot(np.linalg.inv(A_a),phi_n)))
+            if np.amin(lcb) >= gamma:
                 continue
             else:
                 break
         p = np.zeros((N, K))
-        p[n, np.argmax(ucb)] = 1
+        p[n, np.argmin(lcb)] = 1
         return p
         
         "learn is just a call to oracle, which is same as the superclass"
