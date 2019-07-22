@@ -124,7 +124,6 @@ class singleUCB(ContextualBanditAlgo):
                 A_a = self.A[a]
                 theta_a = self.theta[a]
                 d = A_a.shape[0]
-
                 # "Linear programming is used for UCB"
                 # norm_bound = R * np.sqrt(2 * np.log(np.sqrt(np.linalg.det(A_a) / np.linalg.det(lambd*np.eye(d))) / delta)) \
                 #     + np.sqrt(lambd) * S
@@ -132,7 +131,8 @@ class singleUCB(ContextualBanditAlgo):
                 # prob = cp.Problem(cp.Minimize(phi_n.T*x),[cp.quad_form(x - theta_a, A) <= norm_bound**2])
                 # prob.solve()
                 # ucb[a] = prob.value
-                lcb[a] = np.dot(theta_a, phi_n) - alpha * np.sqrt(np.dot(phi_n, np.dot(np.linalg.inv(A_a),phi_n)))
+                # lcb[a] = np.dot(theta_a, phi_n) - alpha * np.sqrt(np.dot(phi_n, np.dot(np.linalg.inv(A_a),phi_n)))
+                lcb[a] = np.dot(theta_a, phi_n) - alpha * np.sqrt(np.dot(phi_n, np.linalg.solve(A_a,phi_n)))
             if np.amin(lcb) >= gamma:
                 continue
             else:
