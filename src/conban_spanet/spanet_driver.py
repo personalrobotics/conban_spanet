@@ -6,6 +6,8 @@ from __future__ import absolute_import
 import os
 import numpy as np
 
+import random
+
 import torch
 import torch.optim as optim
 import torchvision.transforms as transforms
@@ -94,8 +96,13 @@ class SPANetDriver:
         self.success_rates = np.zeros((N, 6))
         self.pi_star = np.zeros((N, 1))
 
+        # Create sampe set
+        self.unseen_food_idx = set()
+        self.unseen_food_idx.update([i for i in range(self.dataset.num_samples)])
+
         for i in range(N):
-            idx = np.random.randint(0, self.dataset.num_samples)
+            idx = random.sample(self.unseen_food_idx, 1)[0]
+            self.unseen_food_idx.remove(idx)
             pv, gv, features = self._sample_dataset(idx)
             self.features[i, :] = features
             self.pi_star[i, 0] = np.argmax(pv)
@@ -164,11 +171,15 @@ class SPANetDriver:
         """
         @param idx: integer in [0, N-1], food item to re-sample once successfully acquired
         """
-        idx_new = np.random.randint(0, self.dataset.num_samples)
+        if len(self.unseen_food_idx) <= 0:
+            return False
+        idx_new = random.sample(self.unseen_food_idx, 1)[0]
+        self.unseen_food_idx.remove(idx_new)
         pv, gv, features = self._sample_dataset(idx_new)
         self.features[idx, :] = features
         self.pi_star[idx, 0] = np.argmax(pv)
         self.success_rates[idx, :] = gv
+        return True
 
 
 

@@ -7,13 +7,28 @@ import argparse
 import os
 import numpy as np
 import time
+import sys
+import signal
 
 from conban_spanet.environment import Environment
 from conban_spanet.conbanalg import *
 
 from bite_selection_package.config import spanet_config as config
 
+envir = None
+
+def signal_handler(sig, frame):
+    print()
+    print("Caught SIGINT")
+    if envir is not None:
+        print("Saving features to features.csv")
+        np.savetxt("features.csv", envir.features, delimiter=",")
+
+    print("Exiting...")
+    sys.exit(0)
+
 if __name__ == '__main__':
+
     ap = argparse.ArgumentParser()
     ap.add_argument('-f', '--food_type', default=None,
                     type=str, help="which food item to exclude")
@@ -67,10 +82,13 @@ if __name__ == '__main__':
 
     # Initialize Environment
     envir = Environment(args.N, food_type=args.food_type, loc_type=args.loc_type, synthetic=args.synthetic)
+
+    signal.signal(signal.SIGINT, signal_handler)
     
     # Run Environment using args.horizon
     start = time.time()
-    cost_algo, cost_spanet,pi_star_choice_hist,pi_choice_hist = envir.run(algo, args.horizon)
+    cost_algo, cost_spanet,pi_star_choice_hist,pi_choice_hist = envir.run(algo, args.horizon, 
+                        time=time, time_prev=start)
     end = time.time()
     print("Time taken: ", end-start)
 

@@ -107,6 +107,7 @@ class singleUCB(ContextualBanditAlgo):
         super(singleUCB,self).__init__(N, K, lambd, d, init, pi_0)
         self.alpha = alpha
         self.gamma = gamma
+        self.Ainv = np.array([np.eye(d+1) for i in range(K)]) * (1.0/lambd)
 
     def explore(self, features_t):
         "p: N * K dimensional prob. matrix, with the sum to 1"
@@ -121,7 +122,7 @@ class singleUCB(ContextualBanditAlgo):
             phi_n = features_t[n,:]
             lcb = np.zeros(K)
             for a in range(K):
-                A_a = self.A[a]
+                A_a = self.Ainv[a]
                 theta_a = self.theta[a]
                 d = A_a.shape[0]
                 # "Linear programming is used for UCB"
@@ -132,7 +133,7 @@ class singleUCB(ContextualBanditAlgo):
                 # prob.solve()
                 # ucb[a] = prob.value
                 # lcb[a] = np.dot(theta_a, phi_n) - alpha * np.sqrt(np.dot(phi_n, np.dot(np.linalg.inv(A_a),phi_n)))
-                lcb[a] = np.dot(theta_a, phi_n) - alpha * np.sqrt(np.dot(phi_n, np.linalg.solve(A_a,phi_n)))
+                lcb[a] = np.dot(theta_a, phi_n) - alpha * np.sqrt(phi_n.T @ A_a @ phi_n)
             if np.amin(lcb) >= gamma:
                 continue
             else:
@@ -141,7 +142,9 @@ class singleUCB(ContextualBanditAlgo):
         p[n, np.argmin(lcb)] = 1
         return p
         
-        "learn is just a call to oracle, which is same as the superclass"
+    def learn(self, features_t, n_t, a_t, c_t, p_t):
+        super().learn(features_t, n_t, a_t, c_t, p_t)
+        self.Ainv[a_t] = np.linalg.inv(self.A[a_t])
 
 
 

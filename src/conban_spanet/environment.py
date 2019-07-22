@@ -17,7 +17,7 @@ class Environment(object):
 
         self.features[:, 1:] = self.driver.get_features()
 
-    def run(self, algo, T):
+    def run(self, algo, T, time, time_prev):
         N = self.N
         costs_algo = []
         costs_spanet = []
@@ -26,14 +26,16 @@ class Environment(object):
 
         N = algo.N
         K = algo.K
+
         # X_to_test = [[] for i in range(K)]
         # y_to_test = [[] for i in range(K)]
 
         # Run algorithm for T time steps
         for t in range(T):
             if t % 10 == 0:
-                print("Now at horzion", t)
-
+                time_now = time.time()
+                print("Now at horzion", t, " Time taken is ", time_now - time_prev)
+                time_prev = time_now
             #if t == 400:
             #    test_oracle(algo, X_to_test, y_to_test)
             # Exploration / Exploitation
@@ -63,13 +65,17 @@ class Environment(object):
             #    # Update X_to_test, y_to_test
             #    X_to_test[a_t].append(self.features[n_t, :] / np.sqrt(p_t[n_t,a_t]))
             #    y_to_test[a_t].append(cost_algo/ np.sqrt(p_t[n_t,a_t]))
-            # Replace successfully acquired food item
-            if (cost_algo == 0):
-                self.driver.resample(n_t)
-                self.features[:, 1:] = self.driver.get_features()
+            
 
             # Record costs for future use
             costs_algo.append(cost_algo)
             costs_spanet.append(cost_SPANet)
+
+            # Replace successfully acquired food item
+            if (cost_algo == 0):
+                if not self.driver.resample(n_t):
+                    print("Exhausted all food items!")
+                    break
+                self.features[:, 1:] = self.driver.get_features()
 
         return (costs_algo, costs_spanet,pi_star_choice_hist,pi_choice_hist)
