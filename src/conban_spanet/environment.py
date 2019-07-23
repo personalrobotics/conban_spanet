@@ -9,10 +9,10 @@ from conban_spanet.dataset_driver import DatasetDriver
 from .utils import test_oracle
 
 class Environment(object):
-    def __init__(self, N, d=2048):
+    def __init__(self, dataset_file, N, d=2048):
         self.N = N
         self.features = np.ones((N, d+1))
-        self.driver = DatasetDriver("dr_dataset.npz", N)
+        self.driver = DatasetDriver(dataset_file, N)
 
         self.features[:, 1:] = self.driver.get_features()
 

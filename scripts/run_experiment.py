@@ -67,7 +67,7 @@ if __name__ == '__main__':
     	args.algo += "_delta_"+str(delta)
 
     # Initialize Environment
-    envir = Environment(args.N)
+    envir = Environment("scripts/dr_dataset.npz", args.N)
 
     signal.signal(signal.SIGINT, signal_handler)
     
