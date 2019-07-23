@@ -5,15 +5,14 @@ from __future__ import absolute_import
 
 import numpy as np
 
-from conban_spanet.spanet_driver import SPANetDriver
+from conban_spanet.dataset_driver import DatasetDriver
 from .utils import test_oracle
 
 class Environment(object):
-    def __init__(self, N, d=2048, food_type="strawberry", loc_type="isolated",
-        synthetic=True):
+    def __init__(self, N, d=2048):
         self.N = N
         self.features = np.ones((N, d+1))
-        self.driver = SPANetDriver(food_type, loc_type, N, synthetic)
+        self.driver = DatasetDriver("dr_dataset.npz", N)
 
         self.features[:, 1:] = self.driver.get_features()
 
@@ -51,9 +50,6 @@ class Environment(object):
             costs = self.driver.sample_loss_vector()
             pi_star = int(self.driver.get_pi_star()[n_t][0])
 
-            #print("n_t: " + str(n_t))
-            #print("pi_star: " + str(pi_star))
-
             cost_SPANet = costs[n_t, pi_star]
             cost_algo = costs[n_t, a_t]
             pi_star_choice_hist.append(pi_star)
@@ -61,10 +57,6 @@ class Environment(object):
 
             # Learning
             algo.learn(self.features, n_t, a_t, cost_algo, p_t)
-            #if t < 400:
-            #    # Update X_to_test, y_to_test
-            #    X_to_test[a_t].append(self.features[n_t, :] / np.sqrt(p_t[n_t,a_t]))
-            #    y_to_test[a_t].append(cost_algo/ np.sqrt(p_t[n_t,a_t]))
             
 
             # Record costs for future use
