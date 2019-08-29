@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     ap = argparse.ArgumentParser()
 
-    ap.add_argument('-ho', '--horizon', default=1000,
+    ap.add_argument('-ho', '--horizon', default=5000,
                     type=int, help="how long to run the experiment")
     
     ap.add_argument('-n', '--N', default=15,
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     				type=str, help="how many food items in the plate")
     ap.add_argument('-alp', '--alpha', default=0.05,
                     type=float, help="alpha for LinUCB")
-    ap.add_argument('-ga', '--gamma',default=1, 
+    ap.add_argument('-ga', '--gamma',default=1000, 
                     type=float, help="gamma for singleUCB")
     ap.add_argument('-g', '--gpu', default='0', type=str, help="GPU ID")
 
@@ -63,11 +63,11 @@ if __name__ == '__main__':
     	algo = multiUCB(N=args.N)
     elif args.algo == "UCB":
     	delta = float(input("Set delta: "))
-    	algo = MultiArmedUCB(N=args.N, T=args.horizon,delta=delta)
+    	algo = MultiArmedUCB(N=args.N, T=args.horizon, delta=delta)
     	args.algo += "_delta_"+str(delta)
 
     # Initialize Environment
-    envir = Environment("scripts/dr_dataset.npz", args.N)
+    envir = Environment("scripts/dr_dataset_n512_wo_banana_honeydew.npz", args.N)
 
     signal.signal(signal.SIGINT, signal_handler)
     

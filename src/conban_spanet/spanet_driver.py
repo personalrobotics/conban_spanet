@@ -16,6 +16,9 @@ from bite_selection_package.model.spanet import SPANet
 from bite_selection_package.config import spanet_config as config
 from bite_selection_package.model.spanet_dataset import SPANetDataset
 
+N_FEATURES = 2048 if config.n_features==None else config.n_features
+N_ACTIONS = 6
+
 
 class SPANetDriver:
     def __init__(self, food_type="strawberry", loc_type='isolated', N=10, synthetic=False, use_wo_spanet=False):
@@ -51,6 +54,8 @@ class SPANetDriver:
                 config.project_dir, 'checkpoint/{}_ckpt.pth'.format(config.project_prefix))
         config.checkpoint_best_filename = os.path.join(
                 config.project_dir, 'checkpoint/{}_ckpt_best.pth'.format(config.project_prefix))
+
+        print("Loading Checkpoint: " + config.checkpoint_best_filename)
         config.test_list_filepath = os.path.join(config.dataset_dir, 'test.txt')
         #checkpoint_file = "/home/conban/conban_ws/src/bite_selection_package/checkpoint/food_spanet_all_rgb_wall_ckpt_best.pth"
         #checkpoint = torch.load(checkpoint_file)
@@ -59,8 +64,9 @@ class SPANetDriver:
 
         # Load Dataset
         exp_mode = 'test'
+        #config.excluded_item = "banana_honeydew_grape_spinach_cauliflower_strawberry_broccoli_kiwi"
         config.excluded_item = food_type
-        if food_type is None:
+        if config.excluded_item is None:
             exp_mode = 'normal'
         config.set_project_prefix()
 
@@ -92,8 +98,8 @@ class SPANetDriver:
             use_wall=config.use_wall)
 
         # Sample N food items
-        self.features = np.zeros((N, 2048))
-        self.success_rates = np.zeros((N, 6))
+        self.features = np.zeros((N, N_FEATURES))
+        self.success_rates = np.zeros((N, N_ACTIONS))
         self.pi_star = np.zeros((N, 1))
 
         # Create sampe set
@@ -117,7 +123,7 @@ class SPANetDriver:
         @return:
             pv (1x6): SPANet's expected success rate for each action
             gv (1x6): Ground-truth success rate for each action
-            features (1x2048): vector of features
+            features (1xN_FEATURES): vector of features
         """
 
         # Pre-processing
@@ -136,11 +142,11 @@ class SPANetDriver:
 
         # Post-process to Numpy
         gv = gt_vector.cpu().detach()[0][4:].numpy()
-        gv.resize((1, 6))
+        gv.resize((1, N_ACTIONS))
         pv = pred.cpu().detach()[0][4:].numpy()
-        pv.resize((1, 6))
+        pv.resize((1, N_ACTIONS))
         features = feat_tf.cpu().detach()[0].numpy()
-        features.resize((1, 2048))
+        features.resize((1, N_FEATURES))
 
         return pv, gv, features
 

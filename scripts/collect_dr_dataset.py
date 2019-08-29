@@ -8,6 +8,10 @@ import numpy as np
 import csv
 
 from conban_spanet.spanet_driver import SPANetDriver
+from bite_selection_package.config import spanet_config as config
+
+N_FEATURES = 2048 if config.n_features==None else config.n_features
+N_ACTIONS = 6
 
 def get_action_idx(filename):
 	ret = 0
@@ -25,7 +29,8 @@ if __name__ == '__main__':
 
 	# Initialize SPANet
 	print("Initializing Driver...")
-	driver = SPANetDriver("banana_honeydew_grape_spinach_cauliflower_strawberry_broccoli_kiwi", None, 1, False, True)
+	#driver = SPANetDriver("banana_honeydew_grape_spinach_cauliflower_strawberry_broccoli_kiwi", None, 1, False, True)
+	driver = SPANetDriver("banana_honeydew", None, 1, False, True)
 
 	# Pull annotated filenames
 	print("Pulling test file names...")
@@ -64,14 +69,14 @@ if __name__ == '__main__':
 
 		# Concatonate features
 		output_row = np.hstack((features, l_hat))
-		assert (output_row.shape == (1, 2054)), "Bad Shape for output!"
+		assert (output_row.shape == (1, N_FEATURES+N_ACTIONS)), "Bad Shape for output!"
 
 		output_csv.append(output_row)
 
 	# Write CSV
 	print("Writing CSV...")
 	output_numpy = np.vstack(output_csv)
-	assert (output_numpy.shape == (len(output_csv), 2054)), "Bad output array size!"
+	assert (output_numpy.shape == (len(output_csv), N_FEATURES + N_ACTIONS)), "Bad output array size!"
 	np.savetxt("dr_dataset.csv", output_numpy, delimiter=",")
 
 
