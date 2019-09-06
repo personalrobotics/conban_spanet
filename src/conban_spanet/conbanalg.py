@@ -80,7 +80,7 @@ class ContextualBanditAlgo(object):
         features = driver.features_bias_test
         expected_loss = driver.expected_loss_test
 
-        pred = features @ (self.theta.T)
+        pred = np.dot(features, (self.theta.T))
         assert pred.shape == (features.shape[0], self.K)
 
         argmin = np.argmin(pred, axis=1).T
@@ -140,7 +140,7 @@ class singleUCB(ContextualBanditAlgo):
         while True:
             n = np.random.choice(N)
             phi_n = features_t[n,:]
-            lcb = self.theta @ phi_n - alpha * np.sqrt(phi_n.T @ self.Ainv @ phi_n)
+            lcb = np.dot(self.theta, phi_n) - alpha * np.sqrt(np.dot(phi_n.T np.dot(self.Ainv, phi_n)))
             assert len(lcb) == K
             if np.amin(lcb) >= gamma:
                 continue
@@ -162,7 +162,7 @@ class singleUCB(ContextualBanditAlgo):
         lcb = np.zeros((num_data, self.K))
         for a in range(self.K):
             A = self.Ainv[a, :, :]
-            lcb[:, a] = features @ (self.theta.T[:, a]) - self.alpha * np.sqrt(np.einsum('ij,ji->i', features, (A @ features.T)))
+            lcb[:, a] = np.dot(features, self.theta.T[:, a]) - self.alpha * np.sqrt(np.einsum('ij,ji->i', features, np.dot(A, features.T)))
 
         argmin = np.argmin(lcb, axis=1).T
         # print(argmin.shape)
@@ -192,7 +192,7 @@ class multiUCB(singleUCB):
 
         for n in range(N):
             phi_n = features_t[n, :]
-            lcb[n, :] = self.theta @ phi_n - alpha * np.sqrt(phi_n.T @ self.Ainv @ phi_n)
+            lcb[n, :] = np.dot(self.theta, phi_n) - alpha * np.sqrt(np.dot(phi_n.T, np.dot(self.Ainv, phi_n)))
 
         p = np.zeros((N, K))
         p[np.unravel_index(np.argmin(lcb), lcb.shape)] = 1
