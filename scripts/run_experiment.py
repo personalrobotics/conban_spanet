@@ -30,35 +30,23 @@ def signal_handler(sig, frame):
 if __name__ == '__main__':
 
     ap = argparse.ArgumentParser()
-    ap.add_argument('-f', '--food_type', default=None,
-                    type=str, help="which food item to exclude")
 
-    ap.add_argument('-ho', '--horizon', default=1000,
+    ap.add_argument('-ho', '--horizon', default=5000,
                     type=int, help="how long to run the experiment")
     
     ap.add_argument('-n', '--N', default=15,
                     type=int, help="how many food items in the plate")
     ap.add_argument('-a', '--algo', default="greedy",
     				type=str, help="how many food items in the plate")
-    ap.add_argument('-lo', '--loc_type', default="isolated",
-                    type=str, help="which location type to choose")
     ap.add_argument('-alp', '--alpha', default=0.05,
                     type=float, help="alpha for LinUCB")
-    ap.add_argument('-ga', '--gamma',default=0, 
+    ap.add_argument('-ga', '--gamma',default=1000, 
                     type=float, help="gamma for singleUCB")
     ap.add_argument('-g', '--gpu', default='0', type=str, help="GPU ID")
-    ap.add_argument('-s', '--synthetic', help="Use Synthetic Data", action="store_true")
 
     args = ap.parse_args()
 
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
-
-    # Validation: make sure args.food_type is in config.items
-    try:
-        if (args.food_type in config.items) == False:
-            raise ValueError("Invalid food_type")
-    except ValueError as ve:
-        print(ve)
 
 
     # Initialize ContextualBanditAlgo
@@ -75,13 +63,11 @@ if __name__ == '__main__':
     	algo = multiUCB(N=args.N)
     elif args.algo == "UCB":
     	delta = float(input("Set delta: "))
-    	algo = MultiArmedUCB(N=args.N, T=args.horizon,delta=delta)
+    	algo = MultiArmedUCB(N=args.N, T=args.horizon, delta=delta)
     	args.algo += "_delta_"+str(delta)
-    if args.synthetic:
-        args.algo += "_synthetic"
 
     # Initialize Environment
-    envir = Environment(args.N, food_type=args.food_type, loc_type=args.loc_type, synthetic=args.synthetic)
+    envir = Environment(args.N)
 
     signal.signal(signal.SIGINT, signal_handler)
     
