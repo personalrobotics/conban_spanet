@@ -1,9 +1,9 @@
-float32[] features
+float64[] features
 # Action taken
 int8 a_t
 int8 loss
 # Probability distribution of choosing each action
-float32[] p_t
+float64[] p_t
 ---
 # True on success and false on failure.
 bool success
