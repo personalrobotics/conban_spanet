@@ -1,10 +1,20 @@
 from .utils import oracle
 import numpy as np
+import os
+
+
+LAMB_DEFAULT = 10
+
+from bite_selection_package.config import spanet_config as config
+#from get_success_rate import get_train_test_seen, get_expected_loss
+from get_success_rate import *
+
+N_FEATURES = 2048 if config.n_features==None else config.n_features
 
 
 class MultiArmedUCB(object):
 
-    def __init__(self, N, K=6, lambd=0.1, d=2048, init=" ", pi_0=None,
+    def __init__(self, N, K=6, lambd=LAMB_DEFAULT, d=N_FEATURES, init=" ", pi_0=None,
                 T=1000, delta=0.1):
         self.N = N
         self.K = K
@@ -23,24 +33,25 @@ class MultiArmedUCB(object):
         delta = self.delta
         p = np.zeros((N, K))
         n = np.random.choice(N) # it really does not matter choose which because they are all strawberry isolated
-        argmax_action = np.argmax(self.mu_hat_t + np.sqrt( np.log(2*K*T/delta)/(2*self.n_t) ) )
-        p[n, argmax_action] = 1
+        argmin_action = np.argmin(self.mu_hat_t - np.sqrt( np.log(2*K*T/delta)/(2*self.n_t) ) )
+        p[n, argmin_action] = 1
         return p
 
     def learn(self, features_t, n_t, a_t, c_t, p_t):
         "Update self.n_t and self.mu_hat_t"
-        "Here we use 0/-1 for success/fail to make the upper bound algo valid"
-        r_t = -c_t
+        #"Here we use 0/-1 for success/fail to make the upper bound algo valid"
+        #r_t = -c_t
         curr_n_t = self.n_t[a_t]
         curr_mu_hat_t = self.mu_hat_t[a_t]
         # Update
-        self.mu_hat_t[a_t] = (curr_mu_hat_t * curr_n_t + r_t) / (curr_n_t + 1)
+        self.mu_hat_t[a_t] = (curr_mu_hat_t * curr_n_t + c_t) / (curr_n_t + 1)
         self.n_t[a_t] = curr_n_t + 1
 
 class ContextualBanditAlgo(object):
     "N: number of food pieces"
 
-    def __init__(self, N, K=6, lambd=0.1, d=2048, init=" ", pi_0=None):
+    def __init__(self, N, K=6, lambd=LAMB_DEFAULT, d=N_FEATURES, 
+        init="pi_null", pi_0=None):
         self.N = N
         self.K = K
 
@@ -50,8 +61,36 @@ class ContextualBanditAlgo(object):
         self.b = np.zeros((K, d+1))
         self.lambd = lambd
         # self.pi = [theta, A, b]
-        if init == "etc":
-            self.theta, self.A, self.b = pi_0
+
+        if init == "pi_null":
+            spanet_training_data, spanet_testing_data = get_train_test_seen()
+            y_loss, _ = get_expected_loss(spanet_training_data, spanet_testing_data,type="seen")
+            feature_train = pad_feature(spanet_training_data[:,:N_FEATURES])
+            feature_test = pad_feature(spanet_testing_data[:,:N_FEATURES])
+
+            self.theta = get_pi_and_loss(feature_train,y_loss)
+            self.theta = self.theta.T
+            assert (self.theta.shape == (K,d+1))
+            # Data format: [features, action_idx, loss, food_idx, background_idx]
+            # Need the action encoding to be 0-5
+            
+
+            for i in range(K):
+                data_at_action_i = spanet_training_data[spanet_training_data[:,-4] == i]
+                n_data_i = data_at_action_i[:, :-4].shape[0]
+                if n_data_i==0:
+                    continue
+                X_i = np.ones((n_data_i, d+1))
+                X_i[:,1:] = data_at_action_i[:, :-4]
+                # y_i = data_at_action_i[:, -3]
+                y_i = y_loss[spanet_training_data[:,-4] == i, i]
+                # y_i = 
+                A_i = np.dot(X_i.T, X_i)
+                b_i = np.dot(X_i.T, y_i)
+                self.A[i] = A_i
+                self.b[i] = b_i
+            #     self.theta[i] = np.linalg.solve(A_i + self.lambd * np.eye(d+1), b_i)
+
 
     def explore(self, features_t):
         "p: N * K dimensional prob. matrix, with the sum to 1"
@@ -60,19 +99,31 @@ class ContextualBanditAlgo(object):
         dist = np.dot(features_t, self.theta.T)  # size of N * K
         K = self.K
         N = self.N
-        argmax_index = np.argmax(dist)
-        argmax_x, argmax_y = argmax_index // K, argmax_index % K
+        argmin_index = np.argmin(dist)
+        argmin_x, argmin_y = argmin_index // K, argmin_index % K
         p = np.zeros((N, K))
-        p[argmax_x, argmax_y] = 1
+        p[argmin_x, argmin_y] = 1
         return p
 
     def learn(self, features_t, n_t, a_t, c_t, p_t):
         oracle(self, features_t[n_t, :], a_t, c_t, p_t[n_t, a_t])
 
+    def expected_loss(self, driver):
+        features = driver.features_bias_test
+        expected_loss = driver.expected_loss_test
+
+        pred = np.dot(features,(self.theta.T))
+        assert pred.shape == (features.shape[0], self.K)
+
+        argmin = np.argmin(pred, axis=1).T
+
+        losses = np.choose(argmin, expected_loss.T)
+        return np.mean(losses)
+
 
 
 class epsilonGreedy(ContextualBanditAlgo):
-    def __init__(self, N, K=6, lambd=0.1, d=2048, init=" ", pi_0=None, epsilon=0.1):
+    def __init__(self, N, K=6, lambd=LAMB_DEFAULT, d=N_FEATURES, init="pi_null", pi_0=None, epsilon=0.1):
         "Default epsilon is 0.1"
         super(epsilonGreedy,self).__init__(N, K, lambd, d, init, pi_0)
         self.epsilon = epsilon
@@ -88,9 +139,9 @@ class epsilonGreedy(ContextualBanditAlgo):
         #argmax_x, argmax_y = argmax_index // K, argmax_index % K
 
         n = np.random.choice(N)
-        argmax_k = np.argmax(dist, axis=1)[n]
+        argmin_k = np.argmin(dist, axis=1)[n]
         prob_vector_n = np.zeros(K) + epsilon / K
-        prob_vector_n[argmax_k] += 1 - epsilon
+        prob_vector_n[argmin_k] += 1 - epsilon
         p = np.zeros((N, K))
         p[n, :] = prob_vector_n
         return p
@@ -101,12 +152,21 @@ class epsilonGreedy(ContextualBanditAlgo):
 
 
 class singleUCB(ContextualBanditAlgo):
-    def __init__(self, N, K=6, lambd=0.1, d=2048, init=" ", pi_0=None,
-                 alpha=0.1, gamma=0.1):
+    def __init__(self, N, K=6, lambd=LAMB_DEFAULT, d=N_FEATURES, init="pi_null", pi_0=None,
+                 alpha=0.1, gamma=0.1,dr=True):
         "Default epsilon is 0.1"
         super(singleUCB,self).__init__(N, K, lambd, d, init, pi_0)
         self.alpha = alpha
         self.gamma = gamma
+        # self.A = np.array([np.eye(d+1) for i in range(K)]) * lambd
+        # self.b = np.zeros((K, d+1))
+        
+        print("Initializing UCB")
+        # Initialize using the SPANet training matrix
+        
+        
+        self.Ainv = np.array([np.eye(d+1) for i in range(K)]) * (1.0/lambd)
+        print()
 
     def explore(self, features_t):
         "p: N * K dimensional prob. matrix, with the sum to 1"
@@ -119,39 +179,46 @@ class singleUCB(ContextualBanditAlgo):
         while True:
             n = np.random.choice(N)
             phi_n = features_t[n,:]
-            ucb = np.zeros(K)
-            for a in range(K):
-                A_a = self.A[a]
-                theta_a = self.theta[a]
-                d = A_a.shape[0]
-
-                # "Linear programming is used for UCB"
-                # norm_bound = R * np.sqrt(2 * np.log(np.sqrt(np.linalg.det(A_a) / np.linalg.det(lambd*np.eye(d))) / delta)) \
-                #     + np.sqrt(lambd) * S
-                # x = cp.Variable(d)
-                # prob = cp.Problem(cp.Minimize(phi_n.T*x),[cp.quad_form(x - theta_a, A) <= norm_bound**2])
-                # prob.solve()
-                # ucb[a] = prob.value
-                ucb[a] = np.dot(theta_a, phi_n) + alpha * np.sqrt(np.dot(phi_n, np.dot(np.linalg.inv(A_a),phi_n)))
-            if np.amax(ucb) <= gamma:
+            lcb = np.dot(self.theta, phi_n) - alpha * np.sqrt( np.dot(np.dot(phi_n.T , self.Ainv) , phi_n))
+            assert len(lcb) == K
+            if np.amin(lcb) >= gamma:
                 continue
             else:
                 break
         p = np.zeros((N, K))
-        p[n, np.argmax(ucb)] = 1
+        p[n, np.argmin(lcb)] = 1
         return p
         
-        "learn is just a call to oracle, which is same as the superclass"
+    def learn(self, features_t, n_t, a_t, c_t, p_t):
+        super().learn(features_t, n_t, a_t, c_t, p_t)
+        self.Ainv[a_t] = np.linalg.inv(self.A[a_t])
+
+    def expected_loss(self, driver):
+        features = driver.features_bias
+        expected_loss = driver.expected_loss
+        num_data = features.shape[0]
+
+        lcb = np.zeros((num_data, self.K))
+        for a in range(self.K):
+            A = self.Ainv[a, :, :]
+            lcb[:, a] = np.dot(features, (self.theta.T[:, a])) - self.alpha * np.sqrt(np.einsum('ij,ji->i', features, (np.dot(A , features.T))))
+
+        argmin = np.argmin(lcb, axis=1).T
+        # print(argmin.shape)
+        # print(argmin)
+        # assert argmin.shape == (num_data, )
+
+        losses = np.choose(argmin, expected_loss.T)
+        # print(losses.shape)
+        # print(losses)
+        # assert losses.shape == (num_data, 1)
+        return np.mean(losses)
 
 
-
-
-
-class multiUCB(ContextualBanditAlgo):
-    def __init__(self, N, K=6, lambd=0.1, d=2048, init=" ", pi_0=None,
+class multiUCB(singleUCB):
+    def __init__(self, N, K=6, lambd=LAMB_DEFAULT, d=N_FEATURES, init="pi_null", pi_0=None,
                  alpha=0.1):
-        super(multiUCB,self).__init__(N, K, lambd, d, init, pi_0)
-        self.alpha = alpha
+        super(multiUCB,self).__init__(N, K, lambd, d, init, pi_0, alpha)
 
     def explore(self, features_t):
         "p: N * K dimensional prob. matrix, with the sum to 1"
@@ -160,24 +227,15 @@ class multiUCB(ContextualBanditAlgo):
         N = self.N
         alpha = self.alpha
 
-        # Pre-calculate inverses
-        A_inv = [None] * K
-        for a in range(K):
-            A_inv[a] = np.linalg.inv(self.A[a])
-            
-        # lambd = self.lambd
-        ucb = np.zeros((N,K))
+        lcb = np.zeros((N, K))
+
         for n in range(N):
-            phi_n = features_t[n,:]
-            for a in range(K):
-                A_a = self.A[a]
-                theta_a = self.theta[a]
-                d = A_a.shape[0]
-                ucb[n, a] = np.dot(theta_a, phi_n) + alpha * np.sqrt(np.dot(phi_n, np.dot(A_inv[a],phi_n)))
+            phi_n = features_t[n, :]
+            lcb[n, :] = np.dot(self.theta, phi_n) - alpha * np.sqrt( np.dot(np.dot(phi_n.T, self.Ainv) , phi_n))
+
         p = np.zeros((N, K))
-        argmax_index = np.argmax(ucb)
-        argmax_x, argmax_y = argmax_index // K, argmax_index % K
-        p[argmax_x, argmax_y] = 1
+        p[np.unravel_index(np.argmin(lcb), lcb.shape)] = 1
         return p
+        
         
         "learn is just a call to oracle, which is same as the superclass"

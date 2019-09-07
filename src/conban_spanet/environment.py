@@ -5,19 +5,22 @@ from __future__ import absolute_import
 
 import numpy as np
 
-from conban_spanet.spanet_driver import SPANetDriver
+from conban_spanet.dataset_driver import DatasetDriver
 from .utils import test_oracle
 
+from bite_selection_package.config import spanet_config as config
+
+N_FEATURES = 2048 if config.n_features==None else config.n_features
+
 class Environment(object):
-    def __init__(self, N, d=2048, food_type="strawberry", loc_type="isolated",
-        synthetic=True):
+    def __init__(self, N, d=N_FEATURES):
         self.N = N
         self.features = np.ones((N, d+1))
-        self.driver = SPANetDriver(food_type, loc_type, N, synthetic)
+        self.driver = DatasetDriver(N)
 
         self.features[:, 1:] = self.driver.get_features()
 
-    def run(self, algo, T):
+    def run(self, algo, T, time, time_prev):
         N = self.N
         costs_algo = []
         costs_spanet = []
@@ -26,16 +29,35 @@ class Environment(object):
 
         N = algo.N
         K = algo.K
-        X_to_test = [[] for i in range(K)]
-        y_to_test = [[] for i in range(K)]
+
+        num_failures = 0
+        MAX_FAILURES = 1
+
+        expected_srs = []
+
+        # X_to_test = [[] for i in range(K)]
+        # y_to_test = [[] for i in range(K)]
 
         # Run algorithm for T time steps
         for t in range(T):
-            if t % 200 == 0:
-                print("Now at horzion", t)
+            if t % 10 == 0:
+                time_now = time.time()
+                print("Now at horzion", t, " Time taken is ", time_now - time_prev)
+                time_prev = time_now
+                
+                if t % 10 == 0:
+                #if t % 100 == 0:
+                    # Getting expectd loss of algorithm
+                    print("Calculating expected loss of algo...")
+                    exp_loss = algo.expected_loss(self.driver)
+                    print("Expected Loss: " + str(exp_loss))
+                    expected_srs.append(1.0 - exp_loss)
+                    time_now = time.time()
+                    print("Time Taken: ", time_now - time_prev)
+                    time_prev = time_now
 
-            if t == 400:
-                test_oracle(algo, X_to_test, y_to_test)
+            #if t == 400:
+            #    test_oracle(algo, X_to_test, y_to_test)
             # Exploration / Exploitation
             p_t = algo.explore(self.features)
 
@@ -49,9 +71,6 @@ class Environment(object):
             costs = self.driver.sample_loss_vector()
             pi_star = int(self.driver.get_pi_star()[n_t][0])
 
-            #print("n_t: " + str(n_t))
-            #print("pi_star: " + str(pi_star))
-
             cost_SPANet = costs[n_t, pi_star]
             cost_algo = costs[n_t, a_t]
             pi_star_choice_hist.append(pi_star)
@@ -59,17 +78,43 @@ class Environment(object):
 
             # Learning
             algo.learn(self.features, n_t, a_t, cost_algo, p_t)
-            if t < 400:
-                # Update X_to_test, y_to_test
-                X_to_test[a_t].append(self.features[n_t, :] / np.sqrt(p_t[n_t,a_t]))
-                y_to_test[a_t].append(cost_algo/ np.sqrt(p_t[n_t,a_t]))
-            # Replace successfully acquired food item
-            if (cost_algo == 0):
-                self.driver.resample(n_t)
-                self.features[:, 1:] = self.driver.get_features()
+            #for a in range(6):
+            #    algo.learn(self.features, n_t, a, costs[n_t, a], np.ones(p_t.shape))
+
 
             # Record costs for future use
             costs_algo.append(cost_algo)
             costs_spanet.append(cost_SPANet)
+
+            # Replace successfully acquired food item
+            # Or give up after some amount of time.
+            """
+            if (cost_algo == 1):
+                num_failures += 1
+                if num_failures >= MAX_FAILURES:
+                    cost_algo = 0
+
+            if (cost_algo == 0):
+                num_failures = 0
+                if not self.driver.resample(n_t):
+                    print("Exhausted all food items!")
+                    break
+                self.features[:, 1:] = self.driver.get_features()
+            """
+            if not self.driver.resample(n_t):
+                print("Exhausted all food items!")
+                break
+            self.features[:, 1:] = self.driver.get_features()
+
+        # Getting expected loss of algorithm
+        print("Calculating expected loss of algo...")
+        exp_loss = algo.expected_loss(self.driver)
+        print("Expected Loss: " + str(exp_loss))
+        expected_srs.append(1.0 - exp_loss)
+        time_now = time.time()
+        print("Time Taken: ", time_now - time_prev)
+        time_prev = time_now
+        
+        np.savez("expected_srs.npz", srs=np.array(expected_srs))
 
         return (costs_algo, costs_spanet,pi_star_choice_hist,pi_choice_hist)
