@@ -7,7 +7,7 @@ LAMB_DEFAULT = 10
 
 from bite_selection_package.config import spanet_config as config
 #from get_success_rate import get_train_test_seen, get_expected_loss
-from get_success_rate import *
+from conban_spanet.utils import *
 
 N_FEATURES = 2048 if config.n_features==None else config.n_features
 
@@ -190,7 +190,7 @@ class singleUCB(ContextualBanditAlgo):
         return p
         
     def learn(self, features_t, n_t, a_t, c_t, p_t):
-        super().learn(features_t, n_t, a_t, c_t, p_t)
+        super(singleUCB,self).learn(features_t, n_t, a_t, c_t, p_t)
         self.Ainv[a_t] = np.linalg.inv(self.A[a_t])
 
     def expected_loss(self, driver):
