@@ -10,7 +10,7 @@ import random
 
 from bite_selection_package.config import spanet_config as config
 #from get_success_rate import get_pi_and_loss,get_train_test_unseen, get_expected_loss
-from get_success_rate import *
+from conban_spanet.utils import *
 
 NUM_FEATURES = 2048 if config.n_features==None else config.n_features
 NUM_ACTIONS = 6
@@ -116,7 +116,7 @@ class DatasetDriver:
         """
         @return (Nx1): SPAnet's action recommendation for each food item
         """
-        expected_loss = self.features_bias[self.plate, :] @ self.pi_star
+        expected_loss = np.dot(self.features_bias[self.plate, :], self.pi_star)
         assert expected_loss.shape == (self.N, NUM_ACTIONS)
 
         #print("Expected Loss: " + str(expected_loss))

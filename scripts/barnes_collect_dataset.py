@@ -10,7 +10,7 @@ import warnings
 
 from conban_spanet.spanet_driver import SPANetDriver
 from bite_selection_package.config import spanet_config as config
-import get_success_rate
+from conban_spanet.utils import *
 
 N_FEATURES = 2048 if config.n_features==None else config.n_features
 N_ACTIONS = 6
@@ -104,9 +104,9 @@ def __filename_to_index(filename, dictionary):
 if __name__ == '__main__':
 
 	# Initialize SPANet
-	print("Path to store: {}".format(get_success_rate.data_path))
+	print("Path to store: {}".format(data_path))
 	print("Initializing Driver...")
-	if get_success_rate.feat_version == 'all':
+	if feat_version == 'all':
 		food_to_exc = "banana_honeydew_grape_spinach_cauliflower_strawberry_broccoli_kiwi"
 	else:
 		food_to_exc = config.excluded_item
@@ -160,6 +160,6 @@ if __name__ == '__main__':
 	#print(output_csv.shape)
 	#print(output_numpy.shape)
 	assert (output_numpy.shape == (len(output_csv), N_FEATURES + 4)), "Bad output array size!"
-	np.savetxt(os.path.join(get_success_rate.data_path,"barnes_partial_dataset_test_all.csv"), output_numpy, delimiter=",")
+	np.savetxt(os.path.join(data_path,"barnes_partial_dataset_test_all.csv"), output_numpy, delimiter=",")
 
 
