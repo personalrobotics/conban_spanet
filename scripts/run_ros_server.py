@@ -12,20 +12,23 @@ TODO:
 """
 
 import argparse
+from conban_spanet.conbanalg import ContextualBanditAlgo, epsilonGreedy, singleUCB, multiUCB, MultiArmedUCB
+from food_detector.srv import GetAction, PublishLoss, GetActionResponse, PublishLossResponse
+import numpy as np
 import os
 import rospy
-from conban_spanet.conbanalg import ContextualBanditAlgo, epsilonGreedy, singleUCB, multiUCB, MultiArmedUCB
-
-from food_detector.srv import GetAction, PublishLoss, GetActionResponse, PublishLossResponse
 
 SERVER_NAME = 'conban_spanet_server'
 
 def _handle_get_action(req, algo):
-    p_t = algo.explore(req.features)
+    # Unflatten features.
+    features = np.expand_dims(req.features, axis=0)
+
+    p_t = algo.explore(features)
 
     # Sample Action
     _, K = p_t.shape
-    p_t_flat = p_t.reshape((-1,))
+    p_t_flat = list(p_t.reshape((-1,)))
     sample_idx = np.random.choice(K, p=p_t_flat)
     a_t = sample_idx % K
 
@@ -33,8 +36,12 @@ def _handle_get_action(req, algo):
 
 def _handle_publish_loss(req, algo):
     try:
+        # Unflatten p_t and features.
         p_t = np.expand_dims(req.p_t, axis=0)
-        algo.learn(req.features, 0, req.a_t, req.loss, p_t)
+        features = np.expand_dims(req.features, axis=0)
+
+        # Learning
+        algo.learn(features, 0, req.a_t, req.loss, p_t)
     except:
         return PublishLossResponse(success=False)
     return PublishLossResponse(success=True)
@@ -42,13 +49,13 @@ def _handle_publish_loss(req, algo):
 def start_get_action(algo):
     """Starts the `GetAction` service with a given algorithm"""
     def handle_wrapper(req):
-        _handle_get_action(req, algo)
+        return _handle_get_action(req, algo)
     rospy.Service('GetAction', GetAction, handle_wrapper)
 
 def start_publish_loss(algo):
     """Starts the `PublishLoss` service with a given algorithm"""
     def handle_wrapper(req):
-        _handle_publish_loss(req, algo)
+        return _handle_publish_loss(req, algo)
     rospy.Service('PublishLoss', PublishLoss, handle_wrapper)
 
 def create_server(algo, server_name=SERVER_NAME):
@@ -80,9 +87,10 @@ if __name__ == '__main__':
 
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
-    N=1
+    # We are only looking at one food item. This may change later.
+    N = 1
 
-    # Initialize ContextualBanditAlgo
+    # Initialize algorithm
     if  args.algo == 'greedy':
         print('Standard contextual bandit chosen')
         algo = ContextualBanditAlgo(N=N)
