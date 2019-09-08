@@ -4,6 +4,7 @@
 
 import argparse
 from bite_selection_package.config import spanet_config as config
+from conban_spanet.algoserver import create_server
 from conban_spanet.conbanalg import ContextualBanditAlgo, epsilonGreedy, singleUCB, multiUCB, MultiArmedUCB
 from conban_spanet.dataset_driver import DatasetDriver
 from conban_spanet.srv import GetAction, PublishLoss
@@ -12,9 +13,6 @@ import os
 import rospy
 import signal
 import time
-
-# TODO: `run_ros_server` will eventually be refactored.
-from run_ros_server import create_server
 
 SAVE_FILE = 'server_features.csv'
 N_FEATURES = 2048 if config.n_features==None else config.n_features
