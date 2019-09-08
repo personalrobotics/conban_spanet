@@ -5,15 +5,15 @@ Initiates the services `getAction` and `publishLoss`.
 
 TODO:
   * Refactor
-    - Move heavy-lifting code to `src/food_detector`
-    - Move `srv` to `src/food_detector`
+    - Move heavy-lifting code to `src/conban_spanet`
+    - Move `srv` to `src/conban_spanet`
   * Run this script as a node in a launch script
   * Use arguments to define `algo`
 """
 
 import argparse
 from conban_spanet.conbanalg import ContextualBanditAlgo, epsilonGreedy, singleUCB, multiUCB, MultiArmedUCB
-from food_detector.srv import GetAction, PublishLoss, GetActionResponse, PublishLossResponse
+from conban_spanet.srv import GetAction, PublishLoss, GetActionResponse, PublishLossResponse
 import numpy as np
 import os
 import rospy

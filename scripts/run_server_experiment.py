@@ -6,7 +6,7 @@ import argparse
 from bite_selection_package.config import spanet_config as config
 from conban_spanet.conbanalg import ContextualBanditAlgo, epsilonGreedy, singleUCB, multiUCB, MultiArmedUCB
 from conban_spanet.dataset_driver import DatasetDriver
-from food_detector.srv import GetAction, PublishLoss
+from conban_spanet.srv import GetAction, PublishLoss
 import numpy as np
 import os
 import rospy
