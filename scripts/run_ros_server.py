@@ -27,15 +27,15 @@ def _handle_get_action(req, algo):
     sample_idx = np.random.choice(K, p=p_t_flat)
     a_t = sample_idx % K
 
-    return srv.GetActionResponse(a_t, p_t_flat)
+    return GetActionResponse(a_t, p_t_flat)
 
 def _handle_publish_loss(req, algo):
     try:
         p_t = np.expand_dims(req.p_t, axis=0)
         algo.learn(req.features, 0, req.a_t, req.loss, p_t)
     except:
-        return False
-    return True
+        return PublishLossResponse(success=False)
+    return PublishLossResponse(success=True)
 
 def start_get_action(algo):
     """Starts the `GetAction` service with a given algorithm"""
