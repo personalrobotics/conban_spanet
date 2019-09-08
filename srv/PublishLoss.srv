@@ -1,7 +1,7 @@
 float64[] features
 # Action taken
 int8 a_t
-int8 loss
+float64 loss
 # Probability distribution of choosing each action
 float64[] p_t
 ---
