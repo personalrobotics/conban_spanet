@@ -4,19 +4,25 @@ from conban_spanet.srv import GetAction, PublishLoss, GetActionResponse, Publish
 import numpy as np
 import rospy
 
+from bite_selection_package.config import spanet_config as config
+N_FEATURES = 2048 if config.n_features==None else config.n_features
+
 SERVER_NAME = 'conban_spanet_server'
 
 def _handle_get_action(req, algo):
     # Unflatten features.
     features = np.expand_dims(req.features, axis=0)
+    assert features.shape == (algo.N, N_FEATURES+1)
 
     p_t = algo.explore(features)
 
     # Sample Action
     _, K = p_t.shape
     p_t_flat = list(p_t.reshape((-1,)))
-    sample_idx = np.random.choice(K, p=p_t_flat)
+    sample_idx = np.random.choice(K, p=np.array(p_t_flat))
     a_t = sample_idx % K
+
+    assert p_t_flat[a_t] > 0.99
 
     return GetActionResponse(a_t, p_t_flat)
 
