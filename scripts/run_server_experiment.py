@@ -17,16 +17,21 @@ import time
 SAVE_FILE = 'server_features.csv'
 N_FEATURES = 2048 if config.n_features==None else config.n_features
 
+last_features = None
+
 def signal_handler(sig, frame):
+    global last_features
     print()
     print('Caught SIGINT')
-    if envir is not None:
+    if last_features is not None:
         print('Saving features to {}'.format(SAVE_FILE))
-        np.savetxt(SAVE_FILE, envir.features, delimiter=',')
+        np.savetxt(SAVE_FILE, last_features, delimiter=',')
     print('Exiting...')
     exit(0)
 
-def run(algo, T, time, time_prev, N, K):    
+def run(algo, T, time, time_prev, N, K):
+    global last_features
+
     # Create service proxies for `GetAction` and `PublishLoss`.
     print('Creating service proxies for GetAction and PublishLoss...')
     rospy.wait_for_service('GetAction')
@@ -108,6 +113,9 @@ def run(algo, T, time, time_prev, N, K):
             print('Exhausted all food items!')
             break
         features[:, 1:] = driver.get_features()
+
+        # These features are saved when a SIGINT is caught.
+        last_features = features
 
     # Getting expected loss of algorithm
     print('Calculating expected loss of algo...')
