@@ -72,8 +72,8 @@ def run(algo, T, time, time_prev, N, K):
             time_prev = time_now
 
         # Sample Action
+        feat_flat = list(features.reshape((-1,)))
         try:
-            feat_flat = list(features.reshape((-1,)))
             resp = get_action(feat_flat)
         except rospy.ServiceException as e:
             exit('Failed to get response from GetAction: {}'.format(e))
@@ -174,7 +174,7 @@ if __name__ == '__main__':
 
     signal.signal(signal.SIGINT, signal_handler)
 
-    create_server(algo)
+    create_server(algo, verbose=False)
 
     # Run environment
     start = time.time()

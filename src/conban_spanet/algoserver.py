@@ -9,8 +9,9 @@ N_FEATURES = 2048 if config.n_features==None else config.n_features
 
 SERVER_NAME = 'conban_spanet_server'
 
-def _handle_get_action(req, algo):
-    print('GetAction: called with len(features)={}'.format(len(req.features)))
+def _handle_get_action(req, algo, verbose=True):
+    if verbose:
+        print('GetAction: called with len(features)={}'.format(len(req.features)))
 
     # Unflatten features.
     features = np.expand_dims(req.features, axis=0)
@@ -26,12 +27,14 @@ def _handle_get_action(req, algo):
 
     assert p_t_flat[a_t] > 0.99
 
-    print('GetAction: responding with a_t={} and len(p_t)={}'.format(a_t, len(p_t)))
+    if verbose:
+        print('GetAction: responding with a_t={} and len(p_t)={}'.format(a_t, len(p_t)))
 
     return GetActionResponse(a_t, p_t_flat)
 
-def _handle_publish_loss(req, algo):
-    print('PublishLoss: called with len(features)={} a_t={} loss={} len(p_t)={}'.format(len(req.features), req.a_t, req.loss, len(req.p_t)))
+def _handle_publish_loss(req, algo, verbose=True):
+    if verbose:
+        print('PublishLoss: called with len(features)={} a_t={} loss={} len(p_t)={}'.format(len(req.features), req.a_t, req.loss, len(req.p_t)))
     try:
         # Unflatten p_t and features.
         p_t = np.expand_dims(req.p_t, axis=0)
@@ -43,23 +46,23 @@ def _handle_publish_loss(req, algo):
         return PublishLossResponse(success=False)
     return PublishLossResponse(success=True)
 
-def start_get_action(algo):
+def start_get_action(algo, verbose=True):
     """Starts the `GetAction` service with a given algorithm"""
     def handle_wrapper(req):
-        return _handle_get_action(req, algo)
+        return _handle_get_action(req, algo, verbose=verbose)
     rospy.Service('GetAction', GetAction, handle_wrapper)
 
-def start_publish_loss(algo):
+def start_publish_loss(algo, verbose=True):
     """Starts the `PublishLoss` service with a given algorithm"""
     def handle_wrapper(req):
-        return _handle_publish_loss(req, algo)
+        return _handle_publish_loss(req, algo, verbose=verbose)
     rospy.Service('PublishLoss', PublishLoss, handle_wrapper)
 
-def create_server(algo, server_name=SERVER_NAME):
+def create_server(algo, server_name=SERVER_NAME, verbose=True):
     """
     Creates the algorithm server with a given algorithm.
     Provides the services `GetAction` and `PublishLoss`.
     """
     rospy.init_node(SERVER_NAME)
-    start_get_action(algo)
-    start_publish_loss(algo)
+    start_get_action(algo, verbose=verbose)
+    start_publish_loss(algo, verbose=verbose)
