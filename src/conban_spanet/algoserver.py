@@ -28,7 +28,7 @@ def _handle_get_action(req, algo, verbose=True):
     assert p_t_flat[a_t] > 0.99
 
     if verbose:
-        print('GetAction: responding with a_t={} and len(p_t)={}'.format(a_t, len(p_t)))
+        print('GetAction: responding with a_t={} and len(p_t)={}'.format(a_t, len(p_t_flat)))
 
     return GetActionResponse(a_t, p_t_flat)
 
