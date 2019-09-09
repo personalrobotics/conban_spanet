@@ -10,6 +10,8 @@ N_FEATURES = 2048 if config.n_features==None else config.n_features
 SERVER_NAME = 'conban_spanet_server'
 
 def _handle_get_action(req, algo):
+    print('GetAction: called with len(features)={}'.format(len(req.features)))
+
     # Unflatten features.
     features = np.expand_dims(req.features, axis=0)
     assert features.shape == (algo.N, N_FEATURES+1)
@@ -24,9 +26,12 @@ def _handle_get_action(req, algo):
 
     assert p_t_flat[a_t] > 0.99
 
+    print('GetAction: responding with a_t={} and len(p_t)={}'.format(a_t, len(p_t)))
+
     return GetActionResponse(a_t, p_t_flat)
 
 def _handle_publish_loss(req, algo):
+    print('PublishLoss: called with len(features)={} a_t={} loss={} len(p_t)={}'.format(len(req.features), req.a_t, req.loss, len(req.p_t)))
     try:
         # Unflatten p_t and features.
         p_t = np.expand_dims(req.p_t, axis=0)
