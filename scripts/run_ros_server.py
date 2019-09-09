@@ -8,7 +8,7 @@ TODO:
 """
 
 import argparse
-from conban_spanet.algoserver import create_server
+from conban_spanet.algoserver import create_server, SERVER_NAME
 from conban_spanet.conbanalg import ContextualBanditAlgo, epsilonGreedy, singleUCB, multiUCB, MultiArmedUCB
 import os
 import rospy

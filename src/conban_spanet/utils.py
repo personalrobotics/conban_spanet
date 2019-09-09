@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from bite_selection_package.config import spanet_config as config
-
+import rospkg
 
 def array_map(f, x):
     return np.array(list(map(f, x)))
@@ -59,10 +59,11 @@ use_dr = False if config.dr_csv==None else True
 # "spanet" means feature from the spanet based on the current unseen
 # "all" means feature from spanet based on 8 seen
 feat_version = "spanet" 
-data_path = "/home/conban/conban_ws/src/conban_spanet/barnes_dataset/curr_spanet"
+rospack = rospkg.RosPack()
+data_path = os.path.join(rospack.get_path('conban_spanet'), "barnes_dataset/curr_spanet/")
 
 if feat_version == "all":
-    data_path = "/home/conban/conban_ws/src/conban_spanet/barnes_dataset"
+    data_path = os.path.join(rospack.get_path('conban_spanet'), "barnes_dataset/")
     
 
 def calculate_expected_loss(dataset, failure_rate_dict,dr):
