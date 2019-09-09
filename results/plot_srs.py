@@ -10,6 +10,11 @@ import os.path
 
 import numpy as np
 
+from conban_spanet.conbanalg import LAMB_DEFAULT
+from bite_selection_package.config import spanet_config as config
+N_FEATURES = 2048 if config.n_features==None else config.n_features
+
+
 ESR_FULL = 0.99
 ESR_PART = 0.137
 PI_STAR = 0.552
@@ -55,7 +60,7 @@ def main():
 	plt.ylabel("Expected Validation Success Rate")
 	plt.xlim(0, 330)
 	plt.xticks([0,100,200,300])
-	plt.title("Test item: banana. d=512, lambda=10")
+	plt.title("Test item: banana. d={}, lambda={}".format(N_FEATURES,LAMB_DEFAULT))
 	#plt.xticks([0, 1000, 2000, 3000, 4000, 4500])
 	plt.ylim(0, 0.9)
 	plt.legend(bbox_to_anchor=(0., 0.82, 1., .082), loc=3,
