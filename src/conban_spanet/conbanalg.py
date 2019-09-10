@@ -3,7 +3,7 @@ import numpy as np
 import os
 
 
-LAMB_DEFAULT = 10
+LAMB_DEFAULT = 50
 
 from bite_selection_package.config import spanet_config as config
 #from get_success_rate import get_train_test_seen, get_expected_loss
@@ -78,7 +78,9 @@ class ContextualBanditAlgo(object):
             for i in range(K):
                 data_at_action_i = spanet_training_data[spanet_training_data[:,-4] == i]
                 n_data_i = data_at_action_i[:, :-4].shape[0]
+                print("#Data for action  {} is {}".format(i, n_data_i)) # DEBUG
                 if n_data_i==0:
+                    print("No data in action {}".format(i))# DEBUG
                     continue
                 X_i = np.ones((n_data_i, d+1))
                 X_i[:,1:] = data_at_action_i[:, :-4]
@@ -87,10 +89,9 @@ class ContextualBanditAlgo(object):
                 # y_i = 
                 A_i = np.dot(X_i.T, X_i)
                 b_i = np.dot(X_i.T, y_i)
-                self.A[i] = A_i
+                self.A[i] += A_i
                 self.b[i] = b_i
             #     self.theta[i] = np.linalg.solve(A_i + self.lambd * np.eye(d+1), b_i)
-
 
     def explore(self, features_t):
         "p: N * K dimensional prob. matrix, with the sum to 1"
