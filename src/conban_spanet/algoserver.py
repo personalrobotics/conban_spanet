@@ -3,11 +3,21 @@
 from conban_spanet.srv import GetAction, PublishLoss, GetActionResponse, PublishLossResponse
 import numpy as np
 import rospy
+import time, os
+import rospkg
+
+rospack = rospkg.RosPack()
+
+import traceback
 
 from bite_selection_package.config import spanet_config as config
+from conban_spanet.conbanalg import LAMB_DEFAULT
+
 N_FEATURES = 2048 if config.n_features==None else config.n_features
 
 SERVER_NAME = 'conban_spanet_server'
+
+trial_no = 1
 
 def _handle_get_action(req, algo, verbose=True):
     if verbose:
@@ -39,10 +49,28 @@ def _handle_publish_loss(req, algo, verbose=True):
         # Unflatten p_t and features.
         p_t = np.expand_dims(req.p_t, axis=0)
         features = np.expand_dims(req.features, axis=0)
+        # Save output result
+        output_row = np.hstack((features, np.array([[req.a_t, req.loss]])))
+        assert (output_row.shape == (1, N_FEATURES+3)), "Bad shape for output!"
+        
+        path = os.path.join(rospack.get_path('conban_spanet'), "online_robot_result/{}_f{}_l{}_trial{}".format(config.excluded_item,N_FEATURES,LAMB_DEFAULT,trial_no))
 
+        if not (os.path.isdir(path)): 
+            # start_time = time.time()
+            try:
+                os.mkdir(path)
+            except OSError:
+                print ("Creation of the directory %s failed" % path)
+            else:
+                print ("Successfully created the directory %s " % path)
+        file_name = "time_{}.csv".format(time.time())
+        print("Saving file: " + str(os.path.join(path,file_name)))
+        np.savetxt(os.path.join(path,file_name), output_row, delimiter=",")
         # Learning
         algo.learn(features, 0, req.a_t, req.loss, p_t)
     except:
+        print("ERROR:")
+        traceback.print_exc()
         return PublishLossResponse(success=False)
     return PublishLossResponse(success=True)
 

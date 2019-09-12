@@ -3,7 +3,7 @@ import numpy as np
 import os
 
 
-LAMB_DEFAULT = 50
+LAMB_DEFAULT = 100
 
 from bite_selection_package.config import spanet_config as config
 #from get_success_rate import get_train_test_seen, get_expected_loss
