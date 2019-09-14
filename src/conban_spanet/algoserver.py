@@ -17,7 +17,16 @@ N_FEATURES = 2048 if config.n_features==None else config.n_features
 
 SERVER_NAME = 'conban_spanet_server'
 
-trial_no = 1
+#0 = Initial Tests
+#1 = First experiment test
+#2 = Unknown
+#3 = Second experiment test
+#4 = Experiment! (Failure)
+#5 = Target practice
+#6 = Experiment!
+#7 = Rerun Carrot
+#8 = Greedy
+trial_no = 8
 
 def _handle_get_action(req, algo, verbose=True):
     if verbose:
