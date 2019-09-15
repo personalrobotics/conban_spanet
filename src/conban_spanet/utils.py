@@ -101,7 +101,7 @@ def get_expected_loss(data_train, dataset, dr=True,type="unseen"):
             for action in [1,3,5]:
                 failure_rate_food[action] = failure_rate_food[action-1]
         failure_rate_dict[food_item_index] = failure_rate_food
-
+    print("The loss dictionary is ", failure_rate_dict)
     return (calculate_expected_loss(data_train,failure_rate_dict,dr),
             calculate_expected_loss(dataset,failure_rate_dict,dr) )
 
@@ -131,32 +131,32 @@ def retrieve_data_from_food(data, food_item_indices):
         all_data = np.concatenate((all_data, dat),axis=0)
     return all_data
 
-def get_train_test_seen():
+def get_train_test_seen(isolated=False):
     train_file = os.path.join(data_path, "barnes_partial_dataset_train_all.csv")
     test_file = os.path.join(data_path,"barnes_partial_dataset_test_all.csv")
     data_train = np.genfromtxt(train_file,delimiter=',')
     data_test = np.genfromtxt(test_file,delimiter=',')
-    # if use_wall:
-    #     data_train = data_train[data_train[:,-1]==1]
-    #     data = data[data[:,-1]==1]
+    if isolated:
+        data_train = data_train[data_train[:,-1]==0]
+        data_test = data_test[data_test[:,-1]==0]
     data_train = retrieve_data_from_food(data_train, food_item_indices_seen)
     data_test = retrieve_data_from_food(data_test, food_item_indices_seen)
     print("Retrieved {} train seen food".format(data_train.shape[0]))
     return (data_train,data_test)
 
-def get_train_test_unseen():
+def get_train_test_unseen(isolated=False):
     train_file = os.path.join(data_path, "barnes_partial_dataset_train_all.csv")
     test_file = os.path.join(data_path,"barnes_partial_dataset_test_all.csv")
     data_train = np.genfromtxt(train_file,delimiter=',')
-    data = np.genfromtxt(test_file,delimiter=',')
-    # if use_wall:
-    #     data_train = data_train[data_train[:,-1]==1]
-    #     data = data[data[:,-1]==1]
+    data_test = np.genfromtxt(test_file,delimiter=',')
+    if isolated:
+        data_train = data_train[data_train[:,-1]==0]
+        data_test = data_test[data_test[:,-1]==0]
     print("Testing these food items: {}".format(EXCLUDED_FOOD.split("_")))
     data_train = retrieve_data_from_food(data_train, food_item_indices)
-    data = retrieve_data_from_food(data, food_item_indices)
-
-    return (data_train,data)
+    data_test = retrieve_data_from_food(data_test, food_item_indices)
+    print("Retrieved {} train unseen food".format(data_train.shape[0]))
+    return (data_train,data_test)
 
 
 
