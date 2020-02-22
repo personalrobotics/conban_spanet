@@ -40,19 +40,14 @@ class DatasetDriver:
         #self.expected_loss = data[:, NUM_FEATURES:]
 
         self.features_test = data_test[:, :NUM_FEATURES]
-        print()
-        print("Number of testing item:: ", self.features_test.shape[0])
-        print()
+
         #self.expected_loss_test = data_test[:, NUM_FEATURES:]
         self.expected_loss,self.expected_loss_test=get_expected_loss(data,data_test,use_dr)
 
-        #self.features_seen_test = data_seen_test[:, :NUM_FEATURES]
-        #self.expected_loss_seen_test = data_seen_test[:, NUM_FEATURES:]
 
-        assert self.expected_loss.shape[1] == NUM_ACTIONS
 
         # Train Pi_Star
-        print("Training Pi Star with lamb=50...")
+        print("Training Pi Star...")
 
         # Add bias
 
@@ -64,6 +59,7 @@ class DatasetDriver:
         #self.features_bias_seen_test = np.pad(self.features_seen_test, ((0, 0), (1, 0)), 'constant', constant_values=(1, 1))
 
         self.pi_star, loss = get_pi_and_loss(self.features_bias, self.expected_loss, self.features_bias_test, self.expected_loss_test, 10)
+        self.pi_star_loss = loss
         print("Pi Star Expected Loss: ", loss)
 
         # Train on 1/6 of the data samples
@@ -75,6 +71,24 @@ class DatasetDriver:
             _, loss = get_pi_and_loss(self.features_bias[test_indices, :], self.expected_loss[test_indices, :], self.features_bias_test, self.expected_loss_test, lamb)
             print("Expected Loss: ", loss)
         """
+
+        # 1 Nov 2019: Not doing cross-validation. Combine training and testing features, and losses
+        self.features = np.vstack((self.features,self.features_test))
+        self.features_test = self.features.copy()
+        assert self.features.shape == self.features_test.shape
+        print("Shape of feature are",self.features.shape)
+        print()
+        print("Number of total unseen item: ", self.features_test.shape[0])
+        print()
+        self.expected_loss = np.vstack((self.expected_loss,self.expected_loss_test))
+        self.expected_loss_test = self.expected_loss.copy()
+
+        self.features_bias = np.vstack((self.features_bias,self.features_bias_test))
+        self.features_bias_test = self.features_bias.copy()
+
+        assert self.expected_loss_test.shape == self.expected_loss.shape
+        assert self.expected_loss.shape[1] == NUM_ACTIONS
+
 
         # Add N items to plate
         self.plate = []

@@ -34,30 +34,24 @@ class Environment(object):
         MAX_FAILURES = 1
 
         expected_srs = []
+        loss_list = []
 
         # X_to_test = [[] for i in range(K)]
         # y_to_test = [[] for i in range(K)]
 
         # Run algorithm for T time steps
         for t in range(T):
+            # Feb 22: We do not care about mean expected loss anymore
+            # exp_loss = algo.expected_loss(self.driver)
+            # loss_list.append(exp_loss)
+            # expected_srs.append(1.0 - exp_loss)
+
             if t % 10 == 0:
                 time_now = time.time()
                 print("Now at horzion", t, " Time taken is ", time_now - time_prev)
                 time_prev = time_now
                 
-                if t % 10 == 0:
-                #if t % 100 == 0:
-                    # Getting expectd loss of algorithm
-                    print("Calculating expected loss of algo...")
-                    exp_loss = algo.expected_loss(self.driver)
-                    print("Expected Loss: " + str(exp_loss))
-                    expected_srs.append(1.0 - exp_loss)
-                    time_now = time.time()
-                    print("Time Taken: ", time_now - time_prev)
-                    time_prev = time_now
 
-            #if t == 400:
-            #    test_oracle(algo, X_to_test, y_to_test)
             # Exploration / Exploitation
             p_t = algo.explore(self.features)
 
@@ -76,6 +70,14 @@ class Environment(object):
             pi_star_choice_hist.append(pi_star)
             pi_choice_hist.append(a_t)
 
+            if t % 10 == 0:
+                # 
+                # # Getting expectd loss of algorithm
+                # print("Expected loss is : " + str(exp_loss))
+                print("cumulative loss is :"+str(np.sum(cost_algo)))
+                time_now = time.time()
+                print("Time Taken: ", time_now - time_prev)
+                time_prev = time_now
             # Learning
             algo.learn(self.features, n_t, a_t, cost_algo, p_t)
             #for a in range(6):
@@ -108,13 +110,13 @@ class Environment(object):
 
         # Getting expected loss of algorithm
         print("Calculating expected loss of algo...")
-        exp_loss = algo.expected_loss(self.driver)
+        # exp_loss = algo.expected_loss(self.driver)
         print("Expected Loss: " + str(exp_loss))
-        expected_srs.append(1.0 - exp_loss)
+        # expected_srs.append(1.0 - exp_loss)
         time_now = time.time()
         print("Time Taken: ", time_now - time_prev)
         time_prev = time_now
         
-        np.savez("expected_srs.npz", srs=np.array(expected_srs))
+        pi_star_loss =self.driver.pi_star_loss
 
-        return (costs_algo, costs_spanet,pi_star_choice_hist,pi_choice_hist)
+        return (costs_algo, costs_spanet,pi_star_choice_hist,pi_choice_hist,expected_srs,loss_list, pi_star_loss)

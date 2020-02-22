@@ -96,8 +96,8 @@ def __filename_to_index(filename, dictionary):
 				index = value
 			else:
 				raise KeyError('Multiple keys for filename {}'.format(filename))
-	if index is None:
-		warnings.warn('No key found in filename {}'.format(filename))
+	# if index is None:
+	# 	warnings.warn('No key found in filename {}'.format(filename))
 	return index
 
 
@@ -117,7 +117,7 @@ if __name__ == '__main__':
 	# Pull annotated filenames
 	print("Pulling test file names...")
 	ann_filenames = driver.dataset.ann_filenames
-	print(ann_filenames)
+	#print(ann_filenames)
 
 	# Pull CSV, loss of 1 corresponds to a failure
 	print("Reading loss CSV...")

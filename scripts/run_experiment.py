@@ -14,6 +14,7 @@ from conban_spanet.environment import Environment
 from conban_spanet.conbanalg import *
 
 from bite_selection_package.config import spanet_config as config
+NUM_FEATURES = 2048 if config.n_features==None else config.n_features
 
 envir = None
 
@@ -34,7 +35,7 @@ if __name__ == '__main__':
     ap.add_argument('-ho', '--horizon', default=5000,
                     type=int, help="how long to run the experiment")
     
-    ap.add_argument('-n', '--N', default=15,
+    ap.add_argument('-n', '--N', default=1,
                     type=int, help="how many food items in the plate")
     ap.add_argument('-a', '--algo', default="greedy",
     				type=str, help="how many food items in the plate")
@@ -42,6 +43,8 @@ if __name__ == '__main__':
                     type=float, help="alpha for LinUCB")
     ap.add_argument('-ga', '--gamma',default=1000, 
                     type=float, help="gamma for singleUCB")
+    ap.add_argument('-eps', '--epsilon',default=0,
+                    type=float, help="epsilon for epsilon-greedy")
     ap.add_argument('-g', '--gpu', default='0', type=str, help="GPU ID")
 
     args = ap.parse_args()
@@ -53,9 +56,10 @@ if __name__ == '__main__':
     if  args.algo == "greedy":
         algo = ContextualBanditAlgo(N=args.N)
     elif args.algo == "epsilon":
-    	epsilon = float(input("Set epsilon: "))
-    	algo = epsilonGreedy(N=args.N, epsilon=epsilon)
-    	args.algo += "_epsilon_" +str(epsilon)
+        # 1 Nov 2019: Change epsilon from input to args
+    	# epsilon = float(input("Set epsilon: "))
+    	algo = epsilonGreedy(N=args.N, epsilon=args.epsilon)
+    	args.algo += "_e_" +str(args.epsilon)
     elif args.algo == "singleUCB":
     	algo = singleUCB(N=args.N, alpha=args.alpha, gamma=args.gamma)
     	args.algo += "_alpha_"+str(args.alpha)+"_gamma_"+str(args.gamma)
@@ -73,19 +77,34 @@ if __name__ == '__main__':
     
     # Run Environment using args.horizon
     start = time.time()
-    cost_algo, cost_spanet,pi_star_choice_hist,pi_choice_hist = envir.run(algo, args.horizon, 
+    cost_algo, cost_spanet,pi_star_choice_hist,pi_choice_hist,expected_srs,loss_list, pi_star_loss = envir.run(algo, args.horizon, 
                         time=time, time_prev=start)
     end = time.time()
     print("Time taken: ", end-start)
 
-    # Store returned lists to CSV for later plotting
-    # Now output to regret and choice history
+    print("pi loss is:   ", np.round(cost_algo,2))
+    print()
+    print("Cumulative loss is:     ", np.sum(cost_algo))
     previous_dir = os.getcwd()
     result_dir = os.path.join(previous_dir, "results")
-    data_to_output = np.array([cost_algo, cost_spanet, pi_star_choice_hist,pi_choice_hist])
-    data_to_output  = data_to_output.T
-    output_file_name = args.algo+"_N_"+str(args.N)+"_T_"+str(args.horizon)+".csv"
+    # data_to_output = np.array([cost_algo, cost_spanet, pi_star_choice_hist,pi_choice_hist])
+    # data_to_output  = data_to_output.T
+    output_file_name = args.algo +"_l_"+str(LAMB_DEFAULT)+"_f_"+str(NUM_FEATURES)+"_wo_banana.npz"
     output_file_name = os.path.join(result_dir, output_file_name)
     print("Saved output file to ", output_file_name)
-    np.savetxt(output_file_name, data_to_output, delimiter=',')
+
+    np.savez(output_file_name, 
+    #exp_loss=np.array(loss_list),
+            pi_loss = np.array(cost_algo), 
+            pi_choice_hist=np.array(pi_choice_hist),
+            pi_star_choice_hist=np.array(pi_star_choice_hist),
+            pi_star_loss = np.array(pi_star_loss))
+
+
+
+    # Store returned lists to CSV for later plotting
+    # Now output to regret and choice history
+    
+    
+    # np.savetxt(output_file_name, data_to_output, delimiter=',')
 

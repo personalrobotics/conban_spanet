@@ -73,12 +73,22 @@ def calculate_expected_loss(dataset, failure_rate_dict,dr):
         food_item_selected = int(dataset[i,-2])
         action_selected = int(dataset[i,-4])
         loss_i = dataset[i,-3] # 1 is failure, 0 is success
-        failure_rate_i = failure_rate_dict[food_item_selected]
+
+        failure_rate_i = failure_rate_dict[food_item_selected].copy()
+        # print(failure_rate_i)
         if dr:
             failure_rate_i[action_selected] += 6*(loss_i - failure_rate_i[action_selected])
-        failure_rate_i[failure_rate_i>=1] = 0.99
-        failure_rate_i[failure_rate_i<=0] = 0.01
-        expected_loss[i] = failure_rate_i
+        # XM 2019 Nov 22: we want real loss, i.e. take off manual thresholding
+        # failure_rate_i[failure_rate_i>=1] = 0.99
+        # failure_rate_i[failure_rate_i<=0] = 0.01
+        expected_loss[i] = failure_rate_i.copy()
+        if (max(abs(expected_loss[i])) > 6.0):
+            print(expected_loss[i])
+            print("food item selected: ",food_item_selected)
+            print("action_selected: ", action_selected)
+            print("loss_i: ", loss_i)
+            print("failure dict is: ",failure_rate_dict)
+        assert max(abs(expected_loss[i])) <= 6.0
     return expected_loss
 
 def get_expected_loss(data_train, dataset, dr=True,type="unseen"):
@@ -94,7 +104,10 @@ def get_expected_loss(data_train, dataset, dr=True,type="unseen"):
     for food_item_index in indices:
         failure_rate_food = np.empty(NUM_ACTIONS)
         for action in range(NUM_ACTIONS):
-            failure_rate=float(np.mean(data_train[:,-3][data_train[:,-4]==action]))
+            dtrain_loss_filter_by_action = data_train[:,-4:][data_train[:,-4]==action]
+            failure_rate=float(np.mean(dtrain_loss_filter_by_action[:,-3][dtrain_loss_filter_by_action[:,-2]==food_item_index]))
+            # XM 2019 Nov 22
+            # failure_rate=float(np.mean(data_train[:,-3][data_train[:,-4]==action]))
             failure_rate_food[action] = failure_rate
         #print("Failure_rate_raw: ",failure_rate_food)
         if food_item_index == 0: # For banana, we copy over 0 to 90 degree
