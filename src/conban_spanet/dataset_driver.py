@@ -20,7 +20,7 @@ use_dr = False if config.dr_csv==None else True
 
 
 class DatasetDriver:
-    def __init__(self, N=10):
+    def __init__(self, N=10, pistar_lamb = 100):
         """
         @param food_type: string specifying excluded food item, e.g. "strawberry"
         @param N: Number of food items to have on the plate at a time
@@ -44,11 +44,6 @@ class DatasetDriver:
         #self.expected_loss_test = data_test[:, NUM_FEATURES:]
         self.expected_loss,self.expected_loss_test=get_expected_loss(data,data_test,use_dr)
 
-
-
-        # Train Pi_Star
-        print("Training Pi Star...")
-
         # Add bias
 
         self.features_bias = pad_feature(self.features)
@@ -57,10 +52,6 @@ class DatasetDriver:
         self.features_bias_test = pad_feature(self.features_test)
         #self.features_bias_test = np.pad(self.features_test, ((0, 0), (1, 0)), 'constant', constant_values=(1, 1))
         #self.features_bias_seen_test = np.pad(self.features_seen_test, ((0, 0), (1, 0)), 'constant', constant_values=(1, 1))
-
-        self.pi_star, loss = get_pi_and_loss(self.features_bias, self.expected_loss, self.features_bias_test, self.expected_loss_test, 10)
-        self.pi_star_loss = loss
-        print("Pi Star Expected Loss: ", loss)
 
         # Train on 1/6 of the data samples
         """
@@ -88,6 +79,14 @@ class DatasetDriver:
 
         assert self.expected_loss_test.shape == self.expected_loss.shape
         assert self.expected_loss.shape[1] == NUM_ACTIONS
+
+        # Train Pi_Star
+        print("Training Pi Star...")
+        # Calculate Pi Star
+        self.pi_star, loss = get_pi_and_loss(self.features_bias, self.expected_loss, self.features_bias_test, self.expected_loss_test, pistar_lamb)
+        
+        self.pi_star_loss = loss
+        print("Pi Star Expected Loss: ", loss)
 
 
         # Add N items to plate
@@ -131,6 +130,20 @@ class DatasetDriver:
         @return (Nx1): SPAnet's action recommendation for each food item
         """
         expected_loss = np.dot(self.features_bias[self.plate, :], self.pi_star)
+        assert expected_loss.shape == (self.N, NUM_ACTIONS)
+
+        #print("Expected Loss: " + str(expected_loss))
+
+        ret = np.argmin(expected_loss, axis=1).reshape((self.N, 1))
+
+        assert ret.shape == (self.N, 1)
+        return ret
+
+    def get_pi_null(self,algo):
+        """
+        @return (Nx1): SPAnet's action recommendation for each food item
+        """
+        expected_loss = np.dot(self.features_bias[self.plate, :], algo.theta_null.T)
         assert expected_loss.shape == (self.N, NUM_ACTIONS)
 
         #print("Expected Loss: " + str(expected_loss))

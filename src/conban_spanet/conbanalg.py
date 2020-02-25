@@ -1,9 +1,11 @@
 from .utils import oracle
 import numpy as np
 import os
+from conban_spanet.spanet_driver import SPANetDriver
 
 
 LAMB_DEFAULT = 10
+PI0_DEFAULT = False
 
 from bite_selection_package.config import spanet_config as config
 #from get_success_rate import get_train_test_seen, get_expected_loss
@@ -14,7 +16,7 @@ N_FEATURES = 2048 if config.n_features==None else config.n_features
 
 class MultiArmedUCB(object):
 
-    def __init__(self, N, K=6, lambd=LAMB_DEFAULT, d=N_FEATURES, init=" ", pi_0=None,
+    def __init__(self, N, K=6, lambd=LAMB_DEFAULT, d=N_FEATURES, pi_0=PI0_DEFAULT,
                 T=1000, delta=0.1):
         self.N = N
         self.K = K
@@ -50,8 +52,7 @@ class MultiArmedUCB(object):
 class ContextualBanditAlgo(object):
     "N: number of food pieces"
 
-    def __init__(self, N, K=6, lambd=LAMB_DEFAULT, d=N_FEATURES, 
-        init="pi_null", pi_0=None):
+    def __init__(self, N, K=6, lambd=LAMB_DEFAULT, d=N_FEATURES, pi_0=PI0_DEFAULT):
         self.N = N
         self.K = K
 
@@ -60,9 +61,30 @@ class ContextualBanditAlgo(object):
         self.A = np.array([np.eye(d+1) for i in range(K)]) * lambd
         self.b = np.zeros((K, d+1))
         self.lambd = lambd
-        # self.pi = [theta, A, b]
+        print("lambda is:       ", self.lambd)
+        
+        """
+        if pi_0:
+            print("Initializing PI 0...")
+            self.A = np.array([np.eye(d+1) for i in range(K)]) * (lambd + 1.0)
+            # Pi_0 is SPANet Last Layer
+            spanet_driver = SPANetDriver(config.excluded_item, None, 1, False, True)
+            weight = spanet_driver.checkpoint['net']['final.weight'].cpu().numpy()
+            assert weight.shape == (K+4, d)
+            weight = weight[4:, :]
+            assert weight.shape == (K, d)
+            bias = spanet_driver.checkpoint['net']['final.bias'].cpu().numpy()
+            assert len(bias) == K+4
+            bias = bias[4:].reshape((K, 1))
 
-        if init == "pi_null":
+            self.b = np.hstack((bias, weight))
+            assert self.b.shape == (K, d+1)
+            self.b *= (lambd + 1.0)
+        """
+
+        
+        if pi_0:
+            print("Training Pi_0 on Seen Foods")
             spanet_training_data, spanet_testing_data = get_train_test_seen()
             y_loss, _ = get_expected_loss(spanet_training_data, spanet_testing_data,type="seen")
             feature_train = pad_feature(spanet_training_data[:,:N_FEATURES])
@@ -92,6 +114,9 @@ class ContextualBanditAlgo(object):
                 self.A[i] += A_i
                 self.b[i] = b_i
             #     self.theta[i] = np.linalg.solve(A_i + self.lambd * np.eye(d+1), b_i)
+        
+        self.theta_null = self.theta.copy()
+
 
     def explore(self, features_t):
         "p: N * K dimensional prob. matrix, with the sum to 1"
@@ -124,9 +149,9 @@ class ContextualBanditAlgo(object):
 
 
 class epsilonGreedy(ContextualBanditAlgo):
-    def __init__(self, N, K=6, lambd=LAMB_DEFAULT, d=N_FEATURES, init="pi_null", pi_0=None, epsilon=0.1):
+    def __init__(self, N, K=6, lambd=LAMB_DEFAULT, d=N_FEATURES, pi_0=PI0_DEFAULT, epsilon=0.1):
         "Default epsilon is 0.1"
-        super(epsilonGreedy,self).__init__(N, K, lambd, d, init, pi_0)
+        super(epsilonGreedy,self).__init__(N, K, lambd, d, pi_0)
         self.epsilon = epsilon
 
     def explore(self, features_t):
@@ -153,10 +178,10 @@ class epsilonGreedy(ContextualBanditAlgo):
 
 
 class singleUCB(ContextualBanditAlgo):
-    def __init__(self, N, K=6, lambd=LAMB_DEFAULT, d=N_FEATURES, init="pi_null", pi_0=None,
+    def __init__(self, N, K=6, lambd=LAMB_DEFAULT, d=N_FEATURES, pi_0=PI0_DEFAULT,
                  alpha=0.1, gamma=0.1,dr=True):
         "Default epsilon is 0.1"
-        super(singleUCB,self).__init__(N, K, lambd, d, init, pi_0)
+        super(singleUCB,self).__init__(N, K, lambd, d, pi_0)
         self.alpha = alpha
         self.gamma = gamma
         # self.A = np.array([np.eye(d+1) for i in range(K)]) * lambd
@@ -217,9 +242,9 @@ class singleUCB(ContextualBanditAlgo):
 
 
 class multiUCB(singleUCB):
-    def __init__(self, N, K=6, lambd=LAMB_DEFAULT, d=N_FEATURES, init="pi_null", pi_0=None,
+    def __init__(self, N, K=6, lambd=LAMB_DEFAULT, d=N_FEATURES, pi_0=PI0_DEFAULT,
                  alpha=0.1):
-        super(multiUCB,self).__init__(N, K, lambd, d, init, pi_0, alpha)
+        super(multiUCB,self).__init__(N, K, lambd, d, pi_0, alpha)
 
     def explore(self, features_t):
         "p: N * K dimensional prob. matrix, with the sum to 1"

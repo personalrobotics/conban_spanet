@@ -57,10 +57,11 @@ class SPANetDriver:
                 config.project_dir, 'checkpoint/{}_ckpt_best.pth'.format(config.project_prefix))
 
         print("Loading Checkpoint: " + config.checkpoint_best_filename)
-        config.test_list_filepath = os.path.join(config.dataset_dir, 'test.txt')
+        config.test_list_filepath = os.path.join(config.dataset_dir, 'train.txt')
         #checkpoint_file = "/home/conban/conban_ws/src/bite_selection_package/checkpoint/food_spanet_all_rgb_wall_ckpt_best.pth"
         #checkpoint = torch.load(checkpoint_file)
         checkpoint = torch.load(config.checkpoint_best_filename)
+        self.checkpoint = checkpoint
         self.spanet_star.load_state_dict(checkpoint['net'])
 
         # Load Dataset
@@ -117,6 +118,8 @@ class SPANetDriver:
                 self.success_rates[i, :] = pv
             else:
                 self.success_rates[i, :] = gv
+
+        config.excluded_item = food_type
 
 
     def _sample_dataset(self, idx):

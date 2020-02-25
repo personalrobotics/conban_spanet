@@ -82,13 +82,24 @@ def calculate_expected_loss(dataset, failure_rate_dict,dr):
         # failure_rate_i[failure_rate_i>=1] = 0.99
         # failure_rate_i[failure_rate_i<=0] = 0.01
         expected_loss[i] = failure_rate_i.copy()
-        if (max(abs(expected_loss[i])) > 6.0):
-            print(expected_loss[i])
-            print("food item selected: ",food_item_selected)
-            print("action_selected: ", action_selected)
-            print("loss_i: ", loss_i)
-            print("failure dict is: ",failure_rate_dict)
+        #if (max(abs(expected_loss[i])) > 6.0):
+        #    print(expected_loss[i])
+        #    print("food item selected: ",food_item_selected)
+        #    print("action_selected: ", action_selected)
+        #    print("loss_i: ", loss_i)
+        #    print("failure dict is: ",failure_rate_dict)
         assert max(abs(expected_loss[i])) <= 6.0
+
+        for e_loss in expected_loss[i]:
+            dr_done = False
+            if e_loss > 1.0 or e_loss < 0.0:
+                if not dr_done:
+                    dr_done = True
+                    break
+                print("ERROR: 2 elements outside [0,1]")
+                print(expected_loss[i])
+                assert False
+
     return expected_loss
 
 def get_expected_loss(data_train, dataset, dr=True,type="unseen"):
@@ -110,11 +121,11 @@ def get_expected_loss(data_train, dataset, dr=True,type="unseen"):
             # failure_rate=float(np.mean(data_train[:,-3][data_train[:,-4]==action]))
             failure_rate_food[action] = failure_rate
         #print("Failure_rate_raw: ",failure_rate_food)
-        if food_item_index == 0: # For banana, we copy over 0 to 90 degree
+        if food_item_index in list((0,3,7,9,10)): # For these food items, we copy over 0 to 90 degree
             for action in [1,3,5]:
                 failure_rate_food[action] = failure_rate_food[action-1]
         failure_rate_dict[food_item_index] = failure_rate_food
-    print("The loss dictionary is ", failure_rate_dict)
+    #print("The loss dictionary is ", failure_rate_dict)
     return (calculate_expected_loss(data_train,failure_rate_dict,dr),
             calculate_expected_loss(dataset,failure_rate_dict,dr) )
 
@@ -128,10 +139,15 @@ def get_pi_and_loss(features_bias, expected_loss, features_bias_test=None, expec
     if not (features_bias_test is None):
         pred = np.dot(features_bias_test, pi)
         assert pred.shape == (features_bias_test.shape[0], NUM_ACTIONS)
+        losses = np.zeros(pred.shape[0])
+        for i in range(len(losses)):
+            argmin = np.random.choice(np.flatnonzero(np.isclose(pred[i, :], pred[i,:].min())))
+            losses[i] = expected_loss_test[i, argmin]
 
-        argmin = np.argmin(pred, axis=1).T
 
-        losses = np.choose(argmin, expected_loss_test.T)
+        #argmin = np.argmin(pred, axis=1).T
+
+        #losses = np.choose(argmin, expected_loss_test.T)
 
         return pi, np.mean(losses)
     else:
@@ -172,8 +188,6 @@ def get_train_test_unseen(isolated=False):
     return (data_train,data_test)
 
 
-
-
 def oracle(CBAlgo, feature_n_t, a_t, c_t, p_a_t):
     "CBAlgo: ContextualBanditAlgo object"
     A_a_t, b_a_t = CBAlgo.A[a_t], CBAlgo.b[a_t]
@@ -183,7 +197,7 @@ def oracle(CBAlgo, feature_n_t, a_t, c_t, p_a_t):
     CBAlgo.A[a_t] = A_a_t
     CBAlgo.b[a_t] = b_a_t
     CBAlgo.theta[a_t] = theta_a_t
-
+ 
 def test_oracle(CBAlgo, X_to_test, y_to_test):
 	K = CBAlgo.K
 	lambd = CBAlgo.lambd

@@ -16,6 +16,7 @@ class Environment(object):
     def __init__(self, N, d=N_FEATURES):
         self.N = N
         self.features = np.ones((N, d+1))
+        print("Initializing Unseen Dataset")
         self.driver = DatasetDriver(N)
 
         self.features[:, 1:] = self.driver.get_features()
@@ -24,6 +25,7 @@ class Environment(object):
         N = self.N
         costs_algo = []
         costs_spanet = []
+        costs_pi_null = []
         pi_star_choice_hist = []
         pi_choice_hist = []
 
@@ -46,6 +48,7 @@ class Environment(object):
             # loss_list.append(exp_loss)
             # expected_srs.append(1.0 - exp_loss)
 
+            # Logging
             if t % 10 == 0:
                 time_now = time.time()
                 print("Now at horzion", t, " Time taken is ", time_now - time_prev)
@@ -63,21 +66,17 @@ class Environment(object):
 
             # Get Costs
             costs = self.driver.sample_loss_vector()
-            pi_star = int(self.driver.get_pi_star()[n_t][0])
+            #pi_star = int(self.driver.get_pi_star()[n_t][0])
+            pi_star = np.argmin(costs[n_t, :])
+            #pi_null = int(self.driver.get_pi_null(algo)[n_t][0])
+            pi_null = np.random.choice(len(costs[n_t, :]))
 
             cost_SPANet = costs[n_t, pi_star]
             cost_algo = costs[n_t, a_t]
+            cost_pi_null = costs[n_t, pi_null]
             pi_star_choice_hist.append(pi_star)
             pi_choice_hist.append(a_t)
 
-            if t % 10 == 0:
-                # 
-                # # Getting expectd loss of algorithm
-                # print("Expected loss is : " + str(exp_loss))
-                print("cumulative loss is :"+str(np.sum(cost_algo)))
-                time_now = time.time()
-                print("Time Taken: ", time_now - time_prev)
-                time_prev = time_now
             # Learning
             algo.learn(self.features, n_t, a_t, cost_algo, p_t)
             #for a in range(6):
@@ -87,6 +86,16 @@ class Environment(object):
             # Record costs for future use
             costs_algo.append(cost_algo)
             costs_spanet.append(cost_SPANet)
+            costs_pi_null.append(cost_pi_null)
+
+            if t % 10 == 0:
+                # 
+                # # Getting expectd loss of algorithm
+                # print("Expected loss is : " + str(exp_loss))
+                print("cumulative loss is :"+str(np.sum(costs_algo)))
+                time_now = time.time()
+                print("Time Taken: ", time_now - time_prev)
+                time_prev = time_now
 
             # Replace successfully acquired food item
             # Or give up after some amount of time.
@@ -108,14 +117,20 @@ class Environment(object):
                 break
             self.features[:, 1:] = self.driver.get_features()
 
+        
+        # print("Calculating the last loss of algo...")
+        # print("Algo cost: ", np.sum(costs_algo))
+        # print("pi star cost: ", np.sum(costs_spanet))
         # Getting expected loss of algorithm
-        print("Calculating expected loss of algo...")
+        # 22 Feb 2020: we do not need expected loss anymore
         # exp_loss = algo.expected_loss(self.driver)
-        print("Expected Loss: " + str(exp_loss))
+        # print("Expected Loss: " + str(exp_loss))
         # expected_srs.append(1.0 - exp_loss)
         time_now = time.time()
         print("Time Taken: ", time_now - time_prev)
         time_prev = time_now
+
+        print("Cumulative pi null loss is:        ", np.sum(costs_pi_null))
         
         pi_star_loss =self.driver.pi_star_loss
 

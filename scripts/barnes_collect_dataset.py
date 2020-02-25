@@ -160,6 +160,6 @@ if __name__ == '__main__':
 	#print(output_csv.shape)
 	#print(output_numpy.shape)
 	assert (output_numpy.shape == (len(output_csv), N_FEATURES + 4)), "Bad output array size!"
-	np.savetxt(os.path.join(data_path,"barnes_partial_dataset_test_all.csv"), output_numpy, delimiter=",")
+	np.savetxt(os.path.join(data_path,"barnes_partial_dataset_train_all.csv"), output_numpy, delimiter=",")
 
 

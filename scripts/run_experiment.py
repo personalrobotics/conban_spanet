@@ -39,6 +39,8 @@ if __name__ == '__main__':
                     type=int, help="how many food items in the plate")
     ap.add_argument('-a', '--algo', default="greedy",
     				type=str, help="how many food items in the plate")
+    ap.add_argument('-lbd', '--lambd', default=10,
+                    type=float, help="lambda for algorithms")
     ap.add_argument('-alp', '--alpha', default=0.05,
                     type=float, help="alpha for LinUCB")
     ap.add_argument('-ga', '--gamma',default=1000, 
@@ -51,18 +53,20 @@ if __name__ == '__main__':
 
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
-
     # Initialize ContextualBanditAlgo
+    print("Initializing Algorithm")
     if  args.algo == "greedy":
-        algo = ContextualBanditAlgo(N=args.N)
+        algo = ContextualBanditAlgo(N=args.N, lambd=args.lambd)
     elif args.algo == "epsilon":
         # 1 Nov 2019: Change epsilon from input to args
     	# epsilon = float(input("Set epsilon: "))
-    	algo = epsilonGreedy(N=args.N, epsilon=args.epsilon)
-    	args.algo += "_e_" +str(args.epsilon)
+        print("Current epsilon is: ", args.epsilon)
+        algo = epsilonGreedy(N=args.N, epsilon=args.epsilon,lambd=args.lambd)
+        args.algo += "_e_" +str(args.epsilon)
     elif args.algo == "singleUCB":
-    	algo = singleUCB(N=args.N, alpha=args.alpha, gamma=args.gamma)
-    	args.algo += "_alpha_"+str(args.alpha)+"_gamma_"+str(args.gamma)
+        print("Current alpha is: ", args.alpha)
+        algo = singleUCB(N=args.N, alpha=args.alpha, gamma=args.gamma,lambd=args.lambd)
+        args.algo += "_alpha_"+str(args.alpha)+"_gamma_"+str(args.gamma)
     elif args.algo == "multiUCB":
     	algo = multiUCB(N=args.N)
     elif args.algo == "UCB":
@@ -71,6 +75,7 @@ if __name__ == '__main__':
     	args.algo += "_delta_"+str(delta)
 
     # Initialize Environment
+    print("Initializing Environment")
     envir = Environment(args.N)
 
     signal.signal(signal.SIGINT, signal_handler)
@@ -81,15 +86,18 @@ if __name__ == '__main__':
                         time=time, time_prev=start)
     end = time.time()
     print("Time taken: ", end-start)
-
+    print("Calculating the last loss of algo...")
     print("pi loss is:   ", np.round(cost_algo,2))
     print()
-    print("Cumulative loss is:     ", np.sum(cost_algo))
+    print("Cumulative pi loss is:     ", np.sum(cost_algo))
+    print("pi star loss is:     ", np.round(cost_spanet,2))
+    print()
+    print("Cumulative pi star loss is:     ", np.sum(cost_spanet))
     previous_dir = os.getcwd()
     result_dir = os.path.join(previous_dir, "results")
     # data_to_output = np.array([cost_algo, cost_spanet, pi_star_choice_hist,pi_choice_hist])
     # data_to_output  = data_to_output.T
-    output_file_name = args.algo +"_l_"+str(LAMB_DEFAULT)+"_f_"+str(NUM_FEATURES)+"_wo_banana.npz"
+    output_file_name = args.algo +"_l_"+str(args.lambd)+"_f_"+str(NUM_FEATURES)+"_wo_" + config.excluded_item+ ".npz"
     output_file_name = os.path.join(result_dir, output_file_name)
     print("Saved output file to ", output_file_name)
 
@@ -98,7 +106,7 @@ if __name__ == '__main__':
             pi_loss = np.array(cost_algo), 
             pi_choice_hist=np.array(pi_choice_hist),
             pi_star_choice_hist=np.array(pi_star_choice_hist),
-            pi_star_loss = np.array(pi_star_loss))
+            pi_star_loss = np.array(cost_spanet))
 
 
 
