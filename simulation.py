@@ -28,10 +28,10 @@ data_path = os.path.join(rospack.get_path('conban_spanet'), "results/")
 
 
 
-lambd = 100.0
+lambd = 1000.0
 eps_list = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
-#for eps in eps_list:
-#	subprocess.run(["python3", "-u", "scripts/run_experiment.py","-a","epsilon","-eps",str(eps),"-lbd",str(lambd)])
+for eps in eps_list:
+	subprocess.run(["python3", "-u", "scripts/run_experiment.py","-a","epsilon","-eps",str(eps),"-lbd",str(lambd)])
 file_lst = list( map(lambda eps: "epsilon_e_{}_l_{}_f_{}_wo_banana_apple_grape.npz".format(eps, lambd,N_FEATURES),eps_list))
 file_lst = list(map(lambda s: os.path.join(data_path, s), file_lst))
 algo_loss_lst = list( map(lambda file: np.sum(np.load(file)["pi_loss"]), file_lst))
@@ -42,8 +42,8 @@ print("The minimum loss is {}, which corresponds to epsilon={}".format(np.min(al
 
 
 alpha_list = [0.001, 0.005, 0.01, 0.05, 0.1, 0.5]
-#for alpha in alpha_list:
-#	subprocess.run(["python3", "-u", "scripts/run_experiment.py","-a","singleUCB", "-alp", str(alpha),"-lbd",str(lambd)])
+for alpha in alpha_list:
+	subprocess.run(["python3", "-u", "scripts/run_experiment.py","-a","singleUCB", "-alp", str(alpha),"-lbd",str(lambd)])
 file_lst = list( map(lambda alpha: "singleUCB_alpha_{}_gamma_1000_l_{}_f_{}_wo_banana_apple_grape.npz".format(alpha, lambd,N_FEATURES),alpha_list))
 file_lst = list(map(lambda s: os.path.join(data_path, s), file_lst))
 algo_loss_lst = list( map(lambda file: np.sum(np.load(file)["pi_loss"]), file_lst))

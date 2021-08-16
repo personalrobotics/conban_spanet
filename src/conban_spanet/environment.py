@@ -66,8 +66,8 @@ class Environment(object):
 
             # Get Costs
             costs = self.driver.sample_loss_vector()
-            #pi_star = int(self.driver.get_pi_star()[n_t][0])
-            pi_star = np.argmin(costs[n_t, :])
+            pi_star = int(self.driver.get_pi_star()[n_t][0])
+            #pi_star = np.argmin(costs[n_t, :])
             #pi_null = int(self.driver.get_pi_null(algo)[n_t][0])
             pi_null = np.random.choice(len(costs[n_t, :]))
 
