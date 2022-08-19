@@ -17,16 +17,11 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser()
 
     ap.add_argument('-a', '--algo', default="greedy",
-		    type=str, help='algorithm to use: greedy, epsilon, singleUCB, multiUCB, UCB')
-    ap.add_argument('-alp', '--alpha', default=0.05,
+		    type=str, help='algorithm to use: greedy, epsilon, linUCB, random')
+    ap.add_argument('-alp', '--alpha', default=0.01,
                     type=float, help='alpha for LinUCB')
-    # TODO: Is this a good default for delta?
-    ap.add_argument('-d', '--delta',default=0,
-                    type=float, help="delta for MultiArmedUCB")
-    ap.add_argument('-e', '--epsilon', default=0,
+    ap.add_argument('-e', '--epsilon', default=0.1,
                     type=float, help='epsilon for epsilon greedy')
-    ap.add_argument('-ga', '--gamma',default=1000,
-                    type=float, help='gamma for singleUCB')
     ap.add_argument('-g', '--gpu', default='0', type=str, help='GPU ID')
 
     args = ap.parse_args()

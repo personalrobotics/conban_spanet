@@ -15,7 +15,8 @@ from conban_spanet.conbanalg import LAMB_DEFAULT
 
 N_FEATURES = 2048 if config.n_features==None else config.n_features
 
-SERVER_NAME = 'conban_spanet_server'
+SERVER_NAME = 'conban_server'
+PACKAGE_NAME = 'posthoc_learn'
 
 #0 = Initial Tests
 #1 = First experiment test
@@ -32,11 +33,12 @@ def _handle_get_action(req, algo, verbose=True):
     if verbose:
         print('GetAction: called with len(features)={}'.format(len(req.features)))
 
-    # Unflatten features.
-    features = np.expand_dims(req.features, axis=0)
-    assert features.shape == (algo.N, N_FEATURES+1)
+    # Unflatten visual features.
+    features = np.array(req.visual)
+    assert len(features) == features.size
+    assert len(features) == N_FEATURES
 
-    p_t = algo.explore(features)
+    p_t = algo.choice(features)
 
     # Sample Action
     _, K = p_t.shape
@@ -62,7 +64,7 @@ def _handle_publish_loss(req, algo, verbose=True):
         output_row = np.hstack((features, np.array([[req.a_t, req.loss]])))
         assert (output_row.shape == (1, N_FEATURES+3)), "Bad shape for output!"
         
-        path = os.path.join(rospack.get_path('conban_spanet'), "online_robot_result/{}_f{}_l{}_trial{}".format(config.excluded_item,N_FEATURES,LAMB_DEFAULT,trial_no))
+        path = os.path.join(rospack.get_path(PACKAGE_NAME), "online_robot_result/{}_f{}_l{}_trial{}".format(config.excluded_item,N_FEATURES,LAMB_DEFAULT,trial_no))
 
         if not (os.path.isdir(path)): 
             # start_time = time.time()

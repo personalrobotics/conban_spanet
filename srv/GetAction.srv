@@ -1,4 +1,5 @@
-float64[] features
+# Feature Vector from SPANet
+float64[] visual
 ---
 # Action
 int8 a_t
