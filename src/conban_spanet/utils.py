@@ -16,6 +16,8 @@ FOOD_NAME_TO_INDEX = {
     "_broccoli_": 6,
     "_kiwi_": 7,
     "_cherry_tomato_": 8,
+    "_cherry_": 8,
+    "_tomato_": 8,
     "_kale_": 9,
     "_lettuce_": 10,
     "_celery_": 11,
