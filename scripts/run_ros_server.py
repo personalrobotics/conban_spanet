@@ -17,7 +17,7 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser()
 
     ap.add_argument('-a', '--algo', default="greedy",
-		    type=str, help='algorithm to use: greedy, epsilon, singleUCB, multiUCB, UCB')
+            type=str, help='algorithm to use: greedy, epsilon, singleUCB, multiUCB, UCB')
     ap.add_argument('-alp', '--alpha', default=0.05,
                     type=float, help='alpha for LinUCB')
     # TODO: Is this a good default for delta?
@@ -43,20 +43,20 @@ if __name__ == '__main__':
 
     elif args.algo == 'epsilon':
         print('Epsilon-greedy contextual bandit chosen with epsilon {}'.format(args.epsilon))
-	algo = epsilonGreedy(N=N, epsilon=args.epsilon)
+        algo = epsilonGreedy(N=N, epsilon=args.epsilon)
 
     elif args.algo == 'singleUCB':
         print('Single UCB chosen with alpha {} and gamma {}'.format(args.alpha, args.gamma))
-	algo = singleUCB(N=N, alpha=args.alpha, gamma=args.gamma)
+        algo = singleUCB(N=N, alpha=args.alpha, gamma=args.gamma)
 
     elif args.algo == 'multiUCB':
         print('Multi UCB chosen')
-	algo = multiUCB(N=N)
+        algo = multiUCB(N=N)
 
     elif args.algo == 'UCB':
         print('Multiarmed UCB chosen with delta {}'.format(args.delta))
         # TODO: should we set the horizon, T?
-	algo = MultiArmedUCB(N=N, delta=args.delta)
+        algo = MultiArmedUCB(N=N, delta=args.delta)
 
     else:
         exit('"{}" is not a valid algorithm type'.format(args.algo))

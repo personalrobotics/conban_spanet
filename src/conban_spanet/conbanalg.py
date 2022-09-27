@@ -5,7 +5,7 @@ from conban_spanet.spanet_driver import SPANetDriver
 
 
 LAMB_DEFAULT = 10
-PI0_DEFAULT = False
+PI0_DEFAULT = True
 
 from bite_selection_package.config import spanet_config as config
 #from get_success_rate import get_train_test_seen, get_expected_loss

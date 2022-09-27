@@ -20,6 +20,8 @@ FOOD_NAME_TO_INDEX = {
     "_lettuce_": 10,
     "_celery_": 11,
     "_bell_pepper_": 12,
+    "_bell_": 12,
+    "_pepper_": 12,
     "_carrot_": 13,
     "_cantaloupe_": 14,
     "_apple_": 15

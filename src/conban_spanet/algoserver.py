@@ -18,15 +18,22 @@ N_FEATURES = 2048 if config.n_features==None else config.n_features
 SERVER_NAME = 'conban_spanet_server'
 
 #0 = Initial Tests
-#1 = First experiment test
-#2 = Unknown
-#3 = Second experiment test
-#4 = Experiment! (Failure)
-#5 = Target practice
-#6 = Experiment!
-#7 = Rerun Carrot
-#8 = Greedy
-trial_no = 8
+
+#1 = Experiment 2 Banana Greedy
+#2 = Experiment 2 Banana Greedy 2
+#3 = Experiment 2 Banana Epsilon
+#4 = Experiment 2 Banana Epsilon 2
+#5 = Experiment 2 Banana UCB
+#6 = Experiment 2 Banana UCB 2
+
+#7 = Experiment 2 Carrot Greedy
+#8 = Experiment 2 Carrot Greedy 2
+#9 = Experiment 2 Carrot Epsilon
+#10 = Experiment 2 Carrot Epsilon 2
+#11 = Experiment 2 Carrot UCB
+#12 = Experiment 2 Carrot UCB 2
+
+trial_no = 12
 
 def _handle_get_action(req, algo, verbose=True):
     if verbose:
@@ -43,8 +50,6 @@ def _handle_get_action(req, algo, verbose=True):
     p_t_flat = list(p_t.reshape((-1,)))
     sample_idx = np.random.choice(K, p=np.array(p_t_flat))
     a_t = sample_idx % K
-
-    assert p_t_flat[a_t] > 0.99
 
     if verbose:
         print('GetAction: responding with a_t={} and len(p_t)={}'.format(a_t, len(p_t_flat)))
